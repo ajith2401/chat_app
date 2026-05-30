@@ -23,7 +23,7 @@ export default function RootLayout({
       <head>
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://res.cloudinary.com https://cloudinary.com; connect-src 'self' http://localhost:4000 ws://localhost:4000 http://127.0.0.1:4000 ws://127.0.0.1:4000 http://localhost:3000 https://api.cloudinary.com;"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://res.cloudinary.com https://cloudinary.com; connect-src 'self' http://localhost:4005 ws://localhost:4005 http://127.0.0.1:4005 ws://127.0.0.1:4005 http://localhost:3005 https://api.cloudinary.com;"
         />
       </head>
       <body className={`${inter.variable} ${playfair.variable} font-sans`}>

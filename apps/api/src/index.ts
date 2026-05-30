@@ -1,8 +1,4 @@
-import dotenv from "dotenv";
-import path from "path";
-dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
-
-// Validate required env vars before anything else boots
+// env.ts calls dotenv.config() itself before validating required vars
 import "./config/env";
 
 import express, { Request, Response, NextFunction } from "express";
@@ -48,7 +44,7 @@ initEventHandlers(io);
 
 app.use(helmet({ contentSecurityPolicy: false })); // CSP handled at Next.js layer
 app.use(cors({
-  origin: (process.env.CLIENT_URL || "http://localhost:3000").split(",").map(s => s.trim()),
+  origin: (process.env.CLIENT_URL || "http://localhost:3005").split(",").map(s => s.trim()),
   credentials: true,
 }));
 app.use(cookieParser());

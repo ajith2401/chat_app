@@ -22,7 +22,7 @@ export default function OnboardingPage() {
   // Listen for partner joining — auto-redirect when relationship activates
   useEffect(() => {
     if (!generatedCode) return;
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000", {
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4005", {
       withCredentials: true,
     });
     socket.on("relationship_activated", async () => {

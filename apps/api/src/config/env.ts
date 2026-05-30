@@ -1,3 +1,8 @@
+import dotenv from "dotenv";
+import path from "path";
+// Load .env before any validation so the module can run standalone
+dotenv.config({ path: path.resolve(process.cwd(), "../../.env") });
+
 const required = (key: string): string => {
   const val = process.env[key];
   if (!val) throw new Error(`Missing required environment variable: ${key}`);
@@ -15,7 +20,7 @@ export const env = {
   OPENAI_API_KEY:          required("OPENAI_API_KEY"),
   MONGODB_URI:             required("MONGODB_URI"),
   REDIS_URL:               required("REDIS_URL"),
-  CLIENT_URL:              optional("CLIENT_URL", "http://localhost:3000"),
+  CLIENT_URL:              optional("CLIENT_URL", "http://localhost:3005"),
   NODE_ENV:                optional("NODE_ENV", "development"),
-  PORT:                    optional("PORT", "4000"),
+  PORT:                    optional("PORT", "4005"),
 };

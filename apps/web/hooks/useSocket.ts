@@ -12,7 +12,7 @@ export const useSocket = (authenticated: boolean) => {
     if (!authenticated) return;
 
     // Cookie (HttpOnly auth_token) is sent automatically via withCredentials
-    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000", {
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4005", {
       transports: ["websocket", "polling"],
       withCredentials: true,
     });

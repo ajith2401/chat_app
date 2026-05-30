@@ -58,6 +58,6 @@ MessageSchema.index(
 MessageSchema.index({ relationshipId: 1, type: 1, createdAt: -1 });
 MessageSchema.index({ relationshipId: 1, "status.seenAt": 1 });
 MessageSchema.index({ senderId: 1, createdAt: -1 });
-MessageSchema.index({ clientGeneratedId: 1 }, { unique: true });
+// clientGeneratedId uniqueness is already enforced by the schema field definition above
 
 export default mongoose.model<IMessage>("Message", MessageSchema);

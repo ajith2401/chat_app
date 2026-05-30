@@ -8,7 +8,7 @@ import { presenceHandlers } from "./handlers/presenceHandlers";
 import { callHandlers } from "./handlers/callHandlers";
 
 export const initSocket = (httpServer: HttpServer) => {
-  const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3000").split(",").map(s => s.trim());
+  const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:3005").split(",").map(s => s.trim());
 
   const io = new Server(httpServer, {
     cors: {
