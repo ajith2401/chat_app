@@ -5,11 +5,12 @@ import { AmbientBackground } from "../../components/AmbientBackground";
 import { GlassContainer } from "../../components/GlassContainer";
 import { ChatBubble } from "../../components/ChatBubble";
 import { MoodSelector } from "../../components/MoodSelector";
+import { EmojiPicker } from "../../components/EmojiPicker";
 import { useChatStore, Message } from "../../store/useChatStore";
 import { usePresenceStore } from "../../store/usePresenceStore";
 import { useSocket } from "../../hooks/useSocket";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Heart, MoreHorizontal, Plus, ImageIcon, Mic, Loader2, X, Smile } from "lucide-react";
+import { Send, Heart, Plus, Mic, Loader2, X, Smile } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { BottomNav } from "../../components/BottomNav";
@@ -186,7 +187,8 @@ export default function ChatPage() {
     <div className="flex h-[100dvh] w-full flex-col bg-[#050505] overflow-hidden font-sans">
       <AmbientBackground />
 
-      <div className="flex flex-1 min-h-0 flex-col items-center justify-center p-4 md:p-8">
+      {/* pb-20 leaves room for the fixed BottomNav at bottom */}
+      <div className="flex flex-1 min-h-0 flex-col items-center justify-center p-4 pb-20 md:p-6 md:pb-20">
       <div className="w-full max-w-5xl flex flex-col min-h-0 flex-1 relative z-10">
         <GlassContainer className="flex-1 min-h-0 flex flex-col shadow-2xl border-white/10 overflow-hidden" intensity="medium">
           {/* Header */}
@@ -290,16 +292,10 @@ export default function ChatPage() {
 
             <AnimatePresence>
               {showEmojiPicker && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 15, scale: 0.9 }}
-                  className="absolute bottom-full left-4 sm:left-8 mb-6 p-4 rounded-[2rem] bg-black/90 backdrop-blur-3xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] z-[300] grid grid-cols-6 gap-3"
-                >
-                  {["❤️", "✨", "😊", "🔥", "🌸", "🥺", "💋", "💌", "💍", "🥰", "👫", "🌙", "☁️", "🫂", "🤞", "🧸", "🤍", "🕊️"].map(emoji => (
-                    <button key={emoji} onClick={() => { setInputValue(p => p + emoji); setShowEmojiPicker(false); }} className="text-2xl hover:scale-125 transition-transform p-1.5 active:scale-95">{emoji}</button>
-                  ))}
-                </motion.div>
+                <EmojiPicker
+                  onSelect={(emoji) => setInputValue((p) => p + emoji)}
+                  onClose={() => setShowEmojiPicker(false)}
+                />
               )}
             </AnimatePresence>
 

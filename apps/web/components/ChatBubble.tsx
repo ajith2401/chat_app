@@ -18,9 +18,27 @@ interface ChatBubbleProps {
   onVisible?: () => void;
 }
 
+// Detect messages that are purely 1–3 emoji characters for large rendering
+const isEmojiOnly = (text: string) => {
+  const t = text.trim();
+  if (!t || t.length > 12) return false;
+  // Check if every code point is in emoji/symbol ranges (no letters/digits)
+  return Array.from(t).every((ch) => {
+    const cp = ch.codePointAt(0) ?? 0;
+    return (
+      (cp >= 0x1F000 && cp <= 0x1FFFF) ||
+      (cp >= 0x2600 && cp <= 0x27BF) ||
+      (cp >= 0xFE00 && cp <= 0xFEFF) ||
+      cp === 0x200D || cp === 0x20E3 ||
+      (cp >= 0x1F3FB && cp <= 0x1F3FF)
+    );
+  });
+};
+
 export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: ChatBubbleProps) => {
   const { content, status, createdAt, type, mediaUrl, replyTo, failed, isOptimistic } = message;
   const timestamp = new Date(createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const emojiOnly = type === "text" && isEmojiOnly(content || "");
   const bubbleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,10 +68,12 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
         <div
           className={cn(
             "rounded-[1.25rem] text-[13px] leading-relaxed relative overflow-hidden transition-all duration-300",
-            isOwn
-              ? "bg-white/10 text-white rounded-tr-none border border-white/5 shadow-lg"
-              : "bg-neutral-900/40 text-neutral-200 rounded-tl-none border border-white/5 shadow-md backdrop-blur-sm",
-            type === "image" ? "p-1.5" : "px-5 py-3.5",
+            emojiOnly
+              ? "bg-transparent border-none shadow-none px-1 py-0.5"
+              : isOwn
+                ? "bg-white/10 text-white rounded-tr-none border border-white/5 shadow-lg px-5 py-3.5"
+                : "bg-neutral-900/40 text-neutral-200 rounded-tl-none border border-white/5 shadow-md backdrop-blur-sm px-5 py-3.5",
+            type === "image" && !emojiOnly ? "!p-1.5" : "",
             failed && "border-rose-500/40 bg-rose-950/20"
           )}
         >
@@ -83,6 +103,8 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
                 <p className="px-3 pb-2 font-light tracking-wide">{content}</p>
               )}
             </div>
+          ) : emojiOnly ? (
+            <p className="text-4xl leading-tight select-none">{content}</p>
           ) : (
             <p className="font-light tracking-wide whitespace-pre-wrap break-words">{content}</p>
           )}

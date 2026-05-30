@@ -20,7 +20,6 @@ const navItems = [
 
 export const BottomNav = () => {
   const pathname = usePathname();
-  if (pathname === "/chat") return null;
 
   return (
     <nav className="fixed bottom-10 z-50 pointer-events-none w-full flex justify-center px-4">

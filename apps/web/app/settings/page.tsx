@@ -52,7 +52,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-start p-4 md:p-8 overflow-y-auto bg-[#050505] scrollbar-hide">
+    <div className="flex h-[100dvh] w-full flex-col items-center justify-start p-4 md:p-8 overflow-y-auto bg-[#050505] scrollbar-hide">
       <AmbientBackground />
       
       <div className="w-full max-w-2xl flex flex-col gap-8 mb-40 mt-16 font-sans">
