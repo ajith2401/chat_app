@@ -32,7 +32,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await api.get("/auth/me");
       setUser(res.data);
-    } catch {
+    } catch (err: any) {
+      // Clear the stale/revoked cookie so the user gets a clean login page
+      if (err.response?.status === 401) {
+        api.post("/auth/logout").catch(() => {});
+      }
       setUser(null);
     } finally {
       setLoading(false);
