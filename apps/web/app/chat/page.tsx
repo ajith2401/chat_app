@@ -116,11 +116,29 @@ export default function ChatPage() {
     sendTyping(false);
   };
 
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+
+    // Client-side validation
+    const ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!ALLOWED.includes(file.type)) {
+      setUploadError("Only JPG, PNG, GIF, WebP allowed");
+      setTimeout(() => setUploadError(null), 3000);
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("Max file size is 10 MB");
+      setTimeout(() => setUploadError(null), 3000);
+      return;
+    }
 
     setUploading(true);
+    setUploadError(null);
     try {
       const { data: sig } = await api.post("/media/request-upload", { folder: "chat" });
       const formData = new FormData();
@@ -130,14 +148,23 @@ export default function ChatPage() {
       formData.append("signature", sig.signature);
       formData.append("folder", sig.folder);
 
-      const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`, { method: "POST", body: formData });
+      const cloudRes = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
+        { method: "POST", body: formData }
+      );
       const cloudData = await cloudRes.json();
-      
-      // Store public_id, not raw URL — ChatBubble constructs the delivery URL
-      handleSend("Shared an image", "image", cloudData.public_id);
-      await api.post("/media/confirm-upload", { fileKey: cloudData.public_id, type: "image" });
-    } catch (err) {
+
+      if (!cloudData.public_id) {
+        throw new Error(cloudData.error?.message || "Upload failed");
+      }
+
+      // Store public_id — ChatBubble constructs the optimised delivery URL
+      handleSend("", "image", cloudData.public_id);
+      api.post("/media/confirm-upload", { fileKey: cloudData.public_id, type: "image" }).catch(() => {});
+    } catch (err: any) {
       console.error("Upload failed", err);
+      setUploadError(err.message || "Upload failed");
+      setTimeout(() => setUploadError(null), 3000);
     } finally {
       setUploading(false);
     }
@@ -286,6 +313,20 @@ export default function ChatPage() {
                     <p className="text-xs text-white/40 truncate italic">"{replyingTo.content}"</p>
                   </div>
                   <button onClick={() => setReplyTo(null)} className="p-2 rounded-full hover:bg-white/5 text-white/20 transition-all"><X className="w-4 h-4" /></button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Upload error toast */}
+            <AnimatePresence>
+              {uploadError && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="absolute bottom-full left-0 right-0 px-4 py-2 bg-rose-950/80 backdrop-blur-xl border-t border-rose-500/20 text-[11px] text-rose-300/80 uppercase tracking-widest font-black text-center"
+                >
+                  {uploadError}
                 </motion.div>
               )}
             </AnimatePresence>

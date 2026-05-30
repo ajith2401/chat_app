@@ -8,16 +8,19 @@ cloudinary.config({
 
 export const getUploadSignature = (folder: string) => {
   const timestamp = Math.round(new Date().getTime() / 1000);
-  const params = {
-    timestamp,
-    folder,
-    allowed_formats: "jpg,jpeg,png,gif,webp",
-    max_bytes: 10_485_760, // 10 MB
-    resource_type: "image",
-  };
-  const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET!);
+  // Only sign params that will also be sent in the POST body.
+  // resource_type is a URL path segment, not a body param, so it must NOT be signed.
+  // allowed_formats/max_bytes are upload-preset concerns; enforce them client-side + in confirmUpload.
+  const signParams = { timestamp, folder };
+  const signature = cloudinary.utils.api_sign_request(signParams, process.env.CLOUDINARY_API_SECRET!);
 
-  return { timestamp, signature, apiKey: process.env.CLOUDINARY_API_KEY, cloudName: process.env.CLOUDINARY_CLOUD_NAME, ...params };
+  return {
+    timestamp,
+    signature,
+    folder,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  };
 };
 
 export const getSecureUrl = (publicId: string, options: any = {}) => {

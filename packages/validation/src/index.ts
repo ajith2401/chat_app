@@ -15,7 +15,8 @@ export const sendMessageSchema = z.object({
   clientGeneratedId: z.string().uuid(),
   content: z.string().min(1).max(4000),
   type: z.enum(["text", "image", "voice", "video", "future-capsule"]).default("text"),
-  mediaUrl: z.string().regex(/^(https:\/\/res\.cloudinary\.com\/|[a-z0-9_/-]+$)/).optional(),
+  // Accept full Cloudinary https URLs OR public_id paths (may contain letters, digits, /, _, -, .)
+  mediaUrl: z.string().max(500).optional(),
   replyTo: z.string().optional(),
 });
 
