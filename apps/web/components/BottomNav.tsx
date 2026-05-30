@@ -22,37 +22,38 @@ export const BottomNav = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-10 z-50 pointer-events-none w-full flex justify-center px-4">
-      <motion.div 
-        initial={{ y: 50, opacity: 0 }}
+    <nav className="fixed bottom-6 z-[100] pointer-events-none w-full flex justify-center px-4">
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="flex items-center gap-1 p-2 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-[60px] bg-black/60 pointer-events-auto max-w-md w-full sm:w-auto"
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+        className="flex items-center gap-1 p-1.5 rounded-[1.75rem] border border-white/[0.14] shadow-[0_8px_32px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.04)] backdrop-blur-2xl bg-neutral-900/85 pointer-events-auto"
       >
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link 
+            <Link
               key={item.href}
-              href={item.href} 
+              href={item.href}
               className={cn(
-                "flex-1 sm:flex-none flex flex-col items-center gap-1.5 px-6 sm:px-8 py-3 rounded-2xl transition-all duration-300 relative group",
-                isActive ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"
+                "flex flex-col items-center gap-1 px-5 sm:px-7 py-2.5 rounded-[1.25rem] transition-all duration-200 relative group select-none",
+                isActive ? "text-white" : "text-white/40 hover:text-white/70"
               )}
             >
-              <item.icon className={cn("w-4 h-4", isActive ? "opacity-100" : "opacity-60 group-hover:opacity-100")} />
+              {isActive && (
+                <motion.div
+                  layoutId="nav-pill"
+                  className="absolute inset-0 rounded-[1.25rem] bg-white/[0.1] border border-white/[0.08]"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <item.icon className={cn("w-[18px] h-[18px] relative z-10 transition-transform duration-200", isActive ? "scale-110" : "group-hover:scale-105")} />
               <span className={cn(
-                "text-[9px] uppercase tracking-[0.2em] font-black",
-                isActive ? "opacity-100" : "opacity-60 group-hover:opacity-100"
+                "text-[8px] uppercase tracking-[0.18em] font-black relative z-10",
+                isActive ? "text-white" : "text-white/40 group-hover:text-white/60"
               )}>
                 {item.label}
               </span>
-              {isActive && (
-                <motion.div 
-                  layoutId="nav-active"
-                  className="absolute inset-0 bg-white/10 rounded-2xl -z-10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
-                />
-              )}
             </Link>
           );
         })}

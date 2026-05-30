@@ -74,13 +74,15 @@ export const MoodSelector = () => {
                       key={mood.id}
                       disabled={saving}
                       onClick={async () => {
+                        // Optimistic — update local vibe immediately for instant feedback
+                        setCurrentVibe(mood.id);
+                        setIsOpen(false);
                         setSaving(true);
                         try {
                           await api.post("/relationships/mood", { mood: mood.id });
-                          setCurrentVibe(mood.id);
-                          setIsOpen(false);
                         } catch {
-                          // ignore
+                          // Revert on failure
+                          setCurrentVibe(currentVibe);
                         } finally {
                           setSaving(false);
                         }

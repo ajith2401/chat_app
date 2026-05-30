@@ -329,6 +329,7 @@ export default function ChatPage() {
         </GlassContainer>
       </div>
       </div>
+      <BottomNav />
     </div>
   );
 }
