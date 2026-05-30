@@ -25,7 +25,7 @@ const MessageSchema: Schema = new Schema({
   relationshipId: { type: Schema.Types.ObjectId, ref: "Relationship", required: true },
   senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   clientGeneratedId: { type: String, required: true, unique: true },
-  content: { type: String, required: true },
+  content: { type: String, default: "" }, // empty for image/voice/media messages
   replyTo: { type: Schema.Types.ObjectId, ref: "Message" },
   type: {
     type: String,

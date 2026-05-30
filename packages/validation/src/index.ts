@@ -13,12 +13,14 @@ export const signupSchema = z.object({
 
 export const sendMessageSchema = z.object({
   clientGeneratedId: z.string().uuid(),
-  content: z.string().min(1).max(4000),
+  content: z.string().max(4000),
   type: z.enum(["text", "image", "voice", "video", "future-capsule"]).default("text"),
-  // Accept full Cloudinary https URLs OR public_id paths (may contain letters, digits, /, _, -, .)
   mediaUrl: z.string().max(500).optional(),
   replyTo: z.string().optional(),
-});
+}).refine(
+  (d) => d.type !== "text" || d.content.trim().length > 0,
+  { message: "Text messages cannot be empty", path: ["content"] }
+);
 
 export const messageSeenSchema = z.object({
   messageId: z.string().min(1),
