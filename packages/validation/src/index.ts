@@ -11,16 +11,54 @@ export const signupSchema = z.object({
   name: z.string().min(2),
 });
 
+// --- E2EE envelope shapes (mirror @couple-chat/crypto) ---
+export const encEnvelopeSchema = z.object({
+  v: z.number().int(),
+  alg: z.string().max(64),
+  nonce: z.string().max(128),
+});
+
+// A generic sealed/wrapped blob: keep it permissive but bounded.
+export const sealedBlobSchema = z.record(z.string(), z.any());
+
 export const sendMessageSchema = z.object({
   clientGeneratedId: z.string().uuid(),
-  content: z.string().max(4000),
+  // content is base64 ciphertext when enc is present; cap raised for AEAD overhead.
+  content: z.string().max(8000),
   type: z.enum(["text", "image", "voice", "video", "future-capsule"]).default("text"),
   mediaUrl: z.string().max(500).optional(),
   replyTo: z.string().optional(),
+  enc: encEnvelopeSchema.optional(),
+  mediaKey: sealedBlobSchema.optional(),
 }).refine(
   (d) => d.type !== "text" || d.content.trim().length > 0,
   { message: "Text messages cannot be empty", path: ["content"] }
 );
+
+// --- Key management endpoint schemas ---
+export const publishIdentitySchema = z.object({
+  identityPub: z.string().min(1).max(256),
+  wrappedIdPrivByPassword: sealedBlobSchema,
+  wrappedIdPrivByRecovery: sealedBlobSchema,
+});
+
+export const registerDeviceSchema = z.object({
+  deviceId: z.string().min(8).max(128),
+  devicePub: z.string().min(1).max(256),
+});
+
+export const ckSharesSchema = z.object({
+  shares: z.array(
+    z.object({
+      deviceId: z.string().min(8).max(128),
+      sealedCK: sealedBlobSchema,
+    })
+  ).min(1).max(20),
+});
+
+export const aiGrantSchema = z.object({
+  wrappedCKForAI: sealedBlobSchema,
+});
 
 export const messageSeenSchema = z.object({
   messageId: z.string().min(1),

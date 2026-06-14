@@ -1,5 +1,12 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export interface IDevice {
+  deviceId: string;
+  devicePub: string;
+  lastSeen?: Date;
+  revokedAt?: Date;
+}
+
 export interface IUser extends Document {
   email: string;
   passwordHash: string;
@@ -8,8 +15,24 @@ export interface IUser extends Document {
   relationshipId?: mongoose.Types.ObjectId;
   presenceStatus: string;
   deviceTokens: string[];
+  // --- E2EE identity key material: server stores only the public key and
+  // opaque Argon2id-wrapped private-key blobs. It can never derive idPriv. ---
+  identityPub?: string;
+  wrappedIdPrivByPassword?: Record<string, unknown>;
+  wrappedIdPrivByRecovery?: Record<string, unknown>;
+  devices: IDevice[];
   createdAt: Date;
 }
+
+const DeviceSchema = new Schema<IDevice>(
+  {
+    deviceId: { type: String, required: true },
+    devicePub: { type: String, required: true },
+    lastSeen: { type: Date, default: Date.now },
+    revokedAt: { type: Date },
+  },
+  { _id: false }
+);
 
 const UserSchema: Schema = new Schema({
   email: { type: String, required: true, unique: true },
@@ -19,6 +42,10 @@ const UserSchema: Schema = new Schema({
   relationshipId: { type: Schema.Types.ObjectId, ref: "Relationship" },
   presenceStatus: { type: String, default: "offline" },
   deviceTokens: [{ type: String }],
+  identityPub: { type: String },
+  wrappedIdPrivByPassword: { type: Schema.Types.Mixed },
+  wrappedIdPrivByRecovery: { type: Schema.Types.Mixed },
+  devices: { type: [DeviceSchema], default: [] },
   createdAt: { type: Date, default: Date.now },
 });
 

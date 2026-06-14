@@ -4,9 +4,13 @@ export interface IMessage extends Document {
   relationshipId: mongoose.Types.ObjectId;
   senderId: mongoose.Types.ObjectId;
   clientGeneratedId: string;
-  content: string;
+  content: string; // ciphertext (base64) when enc.v>=1; plaintext for legacy enc.v:0/absent
   type: "text" | "image" | "voice" | "video" | "future-capsule";
   mediaUrl?: string;
+  // --- E2EE envelope. Absent/v:0 => legacy plaintext content. ---
+  enc?: { v: number; alg: string; nonce: string };
+  // --- Per-file key wrapped under CK (image messages) ---
+  mediaKey?: Record<string, unknown>;
   status: {
     sentAt: Date;
     deliveredAt?: Date;
@@ -14,7 +18,8 @@ export interface IMessage extends Document {
   };
   reactions: Array<{
     userId: mongoose.Types.ObjectId;
-    emoji: string;
+    emoji?: string; // legacy plaintext emoji
+    emojiEnc?: Record<string, unknown>; // encrypted emoji under CK
   }>;
   unlockDate?: Date;
   deletedAt?: Date;
@@ -25,7 +30,13 @@ const MessageSchema: Schema = new Schema({
   relationshipId: { type: Schema.Types.ObjectId, ref: "Relationship", required: true },
   senderId: { type: Schema.Types.ObjectId, ref: "User", required: true },
   clientGeneratedId: { type: String, required: true, unique: true },
-  content: { type: String, default: "" }, // empty for image/voice/media messages
+  content: { type: String, default: "" }, // ciphertext (base64) or empty for media
+  enc: {
+    v: { type: Number },
+    alg: { type: String },
+    nonce: { type: String },
+  },
+  mediaKey: { type: Schema.Types.Mixed },
   replyTo: { type: Schema.Types.ObjectId, ref: "Message" },
   type: {
     type: String,
@@ -41,7 +52,8 @@ const MessageSchema: Schema = new Schema({
   reactions: [
     {
       userId: { type: Schema.Types.ObjectId, ref: "User" },
-      emoji: { type: String },
+      emoji: { type: String }, // legacy plaintext
+      emojiEnc: { type: Schema.Types.Mixed }, // encrypted under CK
     },
   ],
   unlockDate: { type: Date },
