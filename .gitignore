@@ -5,3 +5,9 @@ dist/
 *.local
 .DS_Store
 .env.local
+
+# Local run + test artifacts
+.local-logs/
+.local-mongo/
+test-results/
+playwright-report/

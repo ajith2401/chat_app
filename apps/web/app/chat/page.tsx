@@ -220,15 +220,26 @@ export default function ChatPage() {
     </div>
   );
 
-  // Gate the chat behind E2EE unlock once a relationship exists.
-  if (user?.relationshipId && (cryptoStatus === "locked" || cryptoStatus === "waiting")) {
+  // Gate the chat behind E2EE readiness once a relationship exists, so the
+  // input never appears before the Conversation Key is available (which would
+  // silently drop sends).
+  if (user?.relationshipId && cryptoStatus !== "ready") {
+    if (cryptoStatus === "locked" || cryptoStatus === "waiting") {
+      return (
+        <UnlockScreen
+          mode={cryptoStatus}
+          error={cryptoError}
+          onUnlock={unlock}
+          onRestore={restore}
+        />
+      );
+    }
+    // "init" — keys still resolving; show the loading skeleton briefly.
     return (
-      <UnlockScreen
-        mode={cryptoStatus}
-        error={cryptoError}
-        onUnlock={unlock}
-        onRestore={restore}
-      />
+      <div className="flex h-[100dvh] w-full flex-col items-center justify-center p-8 bg-[#050505]">
+        <Loader2 className="w-6 h-6 text-white/30 animate-spin" />
+        <p className="mt-4 text-[10px] uppercase tracking-[0.3em] text-white/30 font-bold">Securing your space…</p>
+      </div>
     );
   }
 

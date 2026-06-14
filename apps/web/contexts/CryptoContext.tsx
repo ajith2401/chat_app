@@ -66,6 +66,18 @@ export const CryptoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     tryEnsure();
   }, [user?._id, user?.relationshipId, tryEnsure]);
 
+  // Keep keys flowing without manual reloads:
+  //  - Bob ("waiting"): poll until the creator seals CK to him.
+  //  - Alice (creator, "ready"): re-distribute periodically so a partner/device
+  //    that joins after she opened the chat still receives the CK.
+  useEffect(() => {
+    if (!user?.relationshipId) return;
+    if (status !== "waiting" && !(status === "ready" && isCreatorRef.current)) return;
+    const everyMs = status === "waiting" ? 4000 : 9000;
+    const id = setInterval(() => { tryEnsure(); }, everyMs);
+    return () => clearInterval(id);
+  }, [status, user?.relationshipId, tryEnsure]);
+
   const unlock = useCallback(async (password: string) => {
     if (!user?._id) return;
     setError(null);

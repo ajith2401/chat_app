@@ -66,7 +66,10 @@ const authLimiter = rateLimit({
 });
 
 app.use("/api/", apiLimiter);
-app.use("/api/v1/auth/", authLimiter);
+// Strict limit only on credential endpoints — NOT on /auth/me (a read-only
+// session check fired on every page load), which the general limiter covers.
+app.use("/api/v1/auth/login", authLimiter);
+app.use("/api/v1/auth/signup", authLimiter);
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
