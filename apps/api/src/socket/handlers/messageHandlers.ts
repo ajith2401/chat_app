@@ -1,4 +1,4 @@
-import { Message } from "@couple-chat/database";
+import { Message, Relationship } from "@couple-chat/database";
 import { Socket, Server } from "socket.io";
 import { markMessagesAsSeen } from "../../domains/messaging/services/messageService";
 import { addAIJob } from "../../lib/queue";
@@ -15,15 +15,17 @@ export const messageHandlers = (io: Server, socket: Socket) => {
         if (ack) ack({ error: parsed.error.issues.map(i => i.message).join(", ") });
         return;
       }
-      const { clientGeneratedId, content, type, mediaUrl, replyTo } = parsed.data;
+      const { clientGeneratedId, content, type, mediaUrl, replyTo, enc, mediaKey } = parsed.data;
 
       const message = new Message({
         relationshipId: user.relationshipId,
         senderId: user._id,
         clientGeneratedId,
-        content,
+        content, // ciphertext when enc is present
         type,
         mediaUrl,
+        enc,
+        mediaKey,
         replyTo,
         status: { sentAt: new Date() },
       });
@@ -33,9 +35,16 @@ export const messageHandlers = (io: Server, socket: Socket) => {
 
       io.to(relationshipRoom).emit("receive_message", message);
 
-      // Directly enqueue AI job — no in-process EventBus (cross-pod safe)
+      // Enqueue AI job only when this couple has opted in (CK sealed to AI key).
+      // The worker fetches ciphertext + CK itself, so we pass only ids.
       if (type === "text") {
-        addAIJob({ messageId: message._id.toString(), relationshipId: user.relationshipId.toString(), content }).catch(() => {});
+        const rel = await Relationship.findById(user.relationshipId).select("wrappedCKForAI");
+        if (rel?.wrappedCKForAI) {
+          addAIJob({
+            messageId: message._id.toString(),
+            relationshipId: user.relationshipId.toString(),
+          }).catch(() => {});
+        }
       }
 
       if (ack) ack({ ok: true });

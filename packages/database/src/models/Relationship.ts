@@ -8,6 +8,7 @@ export interface ICKShare {
 export interface IRelationship extends Document {
   user1Id: mongoose.Types.ObjectId;
   user2Id?: mongoose.Types.ObjectId;
+  inviteCode?: string;
   status: "pending" | "active";
   anniversaryDate?: Date;
   themePreferences: {

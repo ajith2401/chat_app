@@ -22,7 +22,6 @@ export const addMediaJob = async (data: {
 export const addAIJob = async (data: {
   messageId: string;
   relationshipId: string;
-  content: string;
 }) => {
   await mainQueue.add("process_ai_message", data, {
     attempts: 3,
