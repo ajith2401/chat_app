@@ -73,9 +73,13 @@ export const getKeyBundle = async (relationshipId: string, userId: string) => {
       .map((d: any) => ({ deviceId: d.deviceId, devicePub: d.devicePub }));
 
   return {
-    self: { identityPub: me?.identityPub ?? null, devices: activeDevices(me) },
+    self: { userId, identityPub: me?.identityPub ?? null, devices: activeDevices(me) },
     partner: partner
-      ? { identityPub: partner.identityPub ?? null, devices: activeDevices(partner) }
+      ? {
+          userId: partnerId?.toString() ?? null,
+          identityPub: partner.identityPub ?? null,
+          devices: activeDevices(partner),
+        }
       : null,
   };
 };

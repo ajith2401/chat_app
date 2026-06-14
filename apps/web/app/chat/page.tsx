@@ -13,10 +13,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Heart, Plus, Mic, Loader2, X, Smile } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
+import { useCrypto } from "../../contexts/CryptoContext";
 import { BottomNav } from "../../components/BottomNav";
 import { useInView } from "react-intersection-observer";
 import api from "../../lib/api";
 import { Skeleton } from "../../components/Skeleton";
+import { encryptOutgoing, encryptImage } from "../../lib/crypto-client";
+import { UnlockScreen } from "../../components/UnlockScreen";
 
 export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
@@ -37,7 +40,8 @@ export default function ChatPage() {
   const relationshipStatus = usePresenceStore((s) => s.relationshipStatus);
   const fetchRelationship = usePresenceStore((s) => s.fetchRelationship);
   const { user, loading: authLoading } = useAuth();
-  
+  const { status: cryptoStatus, unlock, restore, error: cryptoError } = useCrypto();
+
   const { sendMessage, sendTyping, markAsSeen, markAllAsSeen, retryMessage } = useSocket(!!user);
   
   const [showNewMessageBadge, setShowNewMessageBadge] = useState(false);
@@ -89,18 +93,34 @@ export default function ChatPage() {
 
   const lastPartnerMessage = [...messages].find(m => m.senderId !== currentUserId);
 
-  const handleSend = (content: string, type: string = "text", mediaUrl?: string) => {
+  const handleSend = (content: string, type: string = "text", mediaUrl?: string, mediaKey?: unknown) => {
     if ((!content.trim() && !mediaUrl) || !user) return;
     const clientGeneratedId = crypto.randomUUID();
+
+    // Encrypt text under CK. The optimistic bubble keeps plaintext for instant
+    // display; only ciphertext + envelope go over the wire.
+    let wireContent = content;
+    let enc: unknown = undefined;
+    if (type === "text") {
+      try {
+        const sealed = encryptOutgoing(content);
+        wireContent = sealed.content;
+        enc = sealed.enc;
+      } catch {
+        // CK not ready — abort send rather than leak plaintext.
+        return;
+      }
+    }
 
     const optimisticMessage: Message = {
       _id: `temp-${clientGeneratedId}`,
       relationshipId: user.relationshipId!,
       senderId: user._id,
       clientGeneratedId,
-      content,
+      content, // plaintext locally for optimistic render
       type,
       mediaUrl,
+      mediaKey: mediaKey as Record<string, unknown> | undefined,
       replyTo: replyingTo,
       status: { sentAt: new Date().toISOString() },
       createdAt: new Date().toISOString(),
@@ -108,7 +128,7 @@ export default function ChatPage() {
     };
 
     useChatStore.getState().addMessage(optimisticMessage);
-    sendMessage(content, clientGeneratedId, type, mediaUrl, replyingTo?._id);
+    sendMessage(wireContent, clientGeneratedId, type, mediaUrl, replyingTo?._id, enc, mediaKey);
 
     setInputValue("");
     setReplyTo(null);
@@ -140,26 +160,37 @@ export default function ChatPage() {
     setUploading(true);
     setUploadError(null);
     try {
+      // Encrypt the file bytes client-side; Cloudinary only ever stores ciphertext.
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let payload: Uint8Array;
+      let mediaKey: unknown;
+      try {
+        ({ ciphertext: payload, mediaKey } = await encryptImage(bytes));
+      } catch {
+        throw new Error("Secure channel not ready — try again in a moment");
+      }
+
       const { data: sig } = await api.post("/media/request-upload", { folder: "chat" });
       const formData = new FormData();
-      formData.append("file", file);
+      // Upload the ciphertext as an opaque raw asset.
+      formData.append("file", new Blob([payload as BlobPart], { type: "application/octet-stream" }), "msg.enc");
       formData.append("api_key", sig.apiKey);
       formData.append("timestamp", sig.timestamp.toString());
       formData.append("signature", sig.signature);
       formData.append("folder", sig.folder);
 
       const cloudRes = await fetch(
-        `https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`,
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/raw/upload`,
         { method: "POST", body: formData }
       );
       const cloudData = await cloudRes.json();
 
-      if (!cloudData.public_id) {
+      if (!cloudData.secure_url) {
         throw new Error(cloudData.error?.message || "Upload failed");
       }
 
-      // Store public_id — ChatBubble constructs the optimised delivery URL
-      handleSend("", "image", cloudData.public_id);
+      // Store the raw ciphertext URL + wrapped key; ChatBubble fetches + decrypts.
+      handleSend("", "image", cloudData.secure_url, mediaKey);
       api.post("/media/confirm-upload", { fileKey: cloudData.public_id, type: "image" }).catch(() => {});
     } catch (err: any) {
       console.error("Upload failed", err);
@@ -188,6 +219,18 @@ export default function ChatPage() {
       </div>
     </div>
   );
+
+  // Gate the chat behind E2EE unlock once a relationship exists.
+  if (user?.relationshipId && (cryptoStatus === "locked" || cryptoStatus === "waiting")) {
+    return (
+      <UnlockScreen
+        mode={cryptoStatus}
+        error={cryptoError}
+        onUnlock={unlock}
+        onRestore={restore}
+      />
+    );
+  }
 
   if (relationshipStatus === "pending") {
     return (

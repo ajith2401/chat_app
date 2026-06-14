@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { Check, CheckCheck, Reply as ReplyIcon, AlertCircle, RotateCcw } from "lucide-react";
+import { decryptIncoming, decryptImageBlob } from "../lib/crypto-client";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -36,10 +37,47 @@ const isEmojiOnly = (text: string) => {
 };
 
 export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: ChatBubbleProps) => {
-  const { content, status, createdAt, type, mediaUrl, replyTo, failed, isOptimistic } = message;
+  const { status, createdAt, type, mediaUrl, replyTo, failed, isOptimistic } = message;
   const timestamp = new Date(createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // Decrypt text under CK (legacy/plaintext passes through). Optimistic messages
+  // carry plaintext content with no envelope, so this is a no-op for them.
+  const content = type === "image" ? message.content : decryptIncoming(message);
+  const replyPreview = replyTo ? decryptIncoming(replyTo) : "";
   const emojiOnly = type === "text" && isEmojiOnly(content || "");
   const bubbleRef = useRef<HTMLDivElement>(null);
+
+  // Encrypted images: fetch ciphertext, decrypt to an in-memory blob URL.
+  const [imgSrc, setImgSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (type !== "image" || !mediaUrl) return;
+    if (!message.mediaKey) {
+      // Legacy unencrypted image (public_id or full URL).
+      setImgSrc(
+        mediaUrl.startsWith("http")
+          ? mediaUrl
+          : `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/q_auto,f_auto/${mediaUrl}`
+      );
+      return;
+    }
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(mediaUrl);
+        const buf = new Uint8Array(await res.arrayBuffer());
+        const plain = decryptImageBlob(buf, message.mediaKey);
+        objectUrl = URL.createObjectURL(new Blob([plain as BlobPart]));
+        if (!cancelled) setImgSrc(objectUrl);
+      } catch {
+        if (!cancelled) setImgSrc(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [type, mediaUrl, message.mediaKey]);
 
   useEffect(() => {
     if (isOwn || !onVisible || !bubbleRef.current) return;
@@ -83,24 +121,23 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
               "mb-3 p-3 rounded-xl bg-white/5 border-l-2 border-white/20 text-xs opacity-60 italic max-w-full overflow-hidden truncate",
               isOwn ? "text-right" : "text-left"
             )}>
-              <p className="line-clamp-1">{replyTo.content}</p>
+              <p className="line-clamp-1">{replyPreview}</p>
             </div>
           )}
 
           {/* Image Content */}
           {type === "image" && mediaUrl ? (
             <div className="flex flex-col gap-2">
-              <img
-                src={
-                  mediaUrl.startsWith("http")
-                    ? mediaUrl
-                    : `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/q_auto,f_auto/${mediaUrl}`
-                }
-                alt="Shared moment"
-                className="rounded-xl max-h-[300px] w-full object-cover shadow-inner"
-              />
-              {content && content !== "Shared an image" && (
-                <p className="px-3 pb-2 font-light tracking-wide">{content}</p>
+              {imgSrc ? (
+                <img
+                  src={imgSrc}
+                  alt="Shared moment"
+                  className="rounded-xl max-h-[300px] w-full object-cover shadow-inner"
+                />
+              ) : (
+                <div className="rounded-xl h-40 w-56 bg-white/5 flex items-center justify-center text-[10px] uppercase tracking-widest text-white/30">
+                  Decrypting…
+                </div>
               )}
             </div>
           ) : emojiOnly ? (

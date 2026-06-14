@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import api from "../../lib/api";
+import { unlockWithPassword } from "../../lib/crypto-client";
 
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -26,7 +27,15 @@ export default function LoginPage() {
     
     try {
       const response = await api.post("/auth/login", { email, password });
-      login(response.data.token, response.data.user);
+      const user = response.data.user;
+      // Unlock E2EE keys with the same password so the chat doesn't prompt again.
+      try {
+        await unlockWithPassword(user._id, password);
+      } catch {
+        // Fresh account without keys, or unwrap failed — the chat's unlock
+        // screen will handle it. Don't block login.
+      }
+      login(response.data.token, user);
     } catch (err: any) {
       setError(err.response?.data?.message || "Invalid email or password");
     } finally {

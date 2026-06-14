@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { BottomNav } from "../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../lib/api";
+import { AIConsentCard } from "../../components/AIConsentCard";
 
 interface Partner {
   _id: string;
@@ -226,6 +227,9 @@ export default function SettingsPage() {
             <p className="text-sm text-white/30 italic text-center py-4">No relationship found.</p>
           )}
         </GlassContainer>
+
+        {/* ── AI consent (E2EE opt-in) ── */}
+        {user?.relationshipId && <AIConsentCard />}
 
         {/* ── System settings ── */}
         <GlassContainer className="p-6 sm:p-8 flex flex-col gap-3" intensity="low">

@@ -9,6 +9,8 @@ export interface Message {
   content: string;
   type: string;
   mediaUrl?: string;
+  enc?: { v: number; alg: string; nonce: string } | null;
+  mediaKey?: Record<string, unknown> | null;
   replyTo?: Message | null;
   status: {
     sentAt: string;

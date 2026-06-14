@@ -69,11 +69,19 @@ export const useSocket = (authenticated: boolean) => {
     };
   }, [authenticated, addMessage, updateMessage, removeMessage, setMessageFailed, setTyping, setPartnerStatus, setCurrentVibe, setCurrentUserId, markAllSeen]);
 
-  const sendMessage = (content: string, clientGeneratedId: string, type: string = "text", mediaUrl?: string, replyTo?: string) => {
+  const sendMessage = (
+    content: string,
+    clientGeneratedId: string,
+    type: string = "text",
+    mediaUrl?: string,
+    replyTo?: string,
+    enc?: unknown,
+    mediaKey?: unknown
+  ) => {
     if (!socketRef.current) return;
     socketRef.current.emit(
       "send_message",
-      { content, clientGeneratedId, type, mediaUrl, replyTo },
+      { content, clientGeneratedId, type, mediaUrl, replyTo, enc, mediaKey },
       (response: { ok?: boolean; error?: string }) => {
         if (response?.error) {
           // Mark as failed so ChatBubble shows inline error; don't silently drop
