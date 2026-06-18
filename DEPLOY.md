@@ -5,7 +5,7 @@ This app is 3 services, so it deploys to **two** platforms:
 | Part | Platform | Why |
 | --- | --- | --- |
 | `apps/web` (Next.js) | **Vercel** | Perfect fit for the frontend |
-| `apps/api` + `apps/worker` | **Koyeb** (one Docker container) | Needs persistent WebSocket + background process; Koyeb's free Nano instance never sleeps |
+| `apps/api` + `apps/worker` | **Render** (one Docker Web Service) | Needs persistent WebSocket + background process; the root `Dockerfile` runs both in one service |
 | Database | **MongoDB Atlas** (free M0) | ✅ already created |
 | Cache/queue | **Upstash Redis** (free) | Socket.io adapter + BullMQ |
 | Images | **Cloudinary** | already configured |
@@ -25,53 +25,61 @@ Repo: https://github.com/ajith2401/chat_app — branch `main`.
 3. Paste it into `.env.deploy.local` as `REDIS_URL`.
 
 ## Step 2 — MongoDB Atlas network access (2 min)
-Your cluster exists. Just allow Koyeb to reach it:
+Your cluster exists. Just allow Render to reach it:
 1. Atlas → **Network Access** → **Add IP Address** → **Allow access from anywhere** (`0.0.0.0/0`).
-   (Koyeb doesn't publish fixed egress IPs on the free tier, so this is required.)
+   (Render's free tier has no fixed egress IP, so this is required.)
 2. Confirm the DB user `couplechatmemory_db_user` exists with read/write. (Connection string is already in `.env.deploy.local`.)
 
-## Step 3 — Deploy the backend to Koyeb (10 min)
-1. Sign up at https://koyeb.com (GitHub login).
-2. **Create Web Service** → **GitHub** → pick `ajith2401/chat_app`, branch `main`.
-3. Builder: **Dockerfile** (Koyeb auto-detects the root `Dockerfile`).
-4. Instance: **Free** (Nano). Region: near you.
-5. **Exposed port: `8000`** (the container listens on `$PORT`; set the port to 8000 and protocol HTTP).
-6. **Environment variables** — add every var from the `# ---- KOYEB ----` section of `.env.deploy.local`:
+## Step 3 — Deploy the backend to Render (10 min)
+1. Sign up at https://render.com (GitHub login).
+2. **New → Web Service** → connect **GitHub** → pick `ajith2401/chat_app`, branch `main`.
+3. Settings:
+   - **Name:** `couple-chat-api` (anything)
+   - **Language / Runtime:** **Docker**
+   - **Root Directory:** *(leave BLANK)* — the `Dockerfile` is at the repo root and copies paths from root, so the build context must be the repo root.
+   - **Dockerfile Path:** `./Dockerfile` (default)
+   - **Instance Type:** **Free**
+   - **Health Check Path:** `/health`
+   - You do **not** set a port — the app listens on Render's injected `$PORT`, which Render auto-detects.
+4. **Environment variables** — add every var from the `# ---- RENDER (backend) ----` section of `.env.deploy.local`:
    `NODE_ENV, JWT_SECRET, MONGODB_URI, REDIS_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, OPENAI_API_KEY, AI_PUBLIC_KEY, AI_PRIVATE_KEY`.
-   (Leave `CLIENT_URL` for Step 5. Don't set `PORT` — Koyeb injects it.)
-7. Deploy. When healthy, copy the public URL, e.g. `https://couple-chat-xxxx.koyeb.app`.
-8. Sanity check: open `https://<koyeb-app>.koyeb.app/health` → should return `{"status":"ok"}`.
+   (Leave `CLIENT_URL` for Step 5. Do **not** set `PORT` — Render injects it.)
+5. **Create Web Service.** First build takes ~3–5 min.
+6. Copy the public URL, e.g. `https://couple-chat-api.onrender.com`.
+7. Sanity check: open `https://<your-app>.onrender.com/health` → `{"status":"ok"}`.
+
+> ⚠️ Render's **free** Web Service **sleeps after ~15 min idle**. The first visit after a nap takes ~30–60s to wake, and it can briefly drop a live socket. Fine for testing with your partner; for always-on, upgrade to the $7 Starter instance.
 
 ## Step 4 — Deploy the web to Vercel (5 min)
 1. https://vercel.com → **Add New → Project** → import `ajith2401/chat_app`.
 2. **Root Directory: `apps/web`** (click Edit → select it). Framework auto-detects **Next.js**.
    (The committed `apps/web/vercel.json` sets the install command to run from the monorepo root so the workspace packages resolve.)
-3. **Environment Variables** — add the `# ---- VERCEL ----` vars from `.env.deploy.local`, replacing `<koyeb-app>` with your real Koyeb URL:
-   - `NEXT_PUBLIC_API_URL = https://<koyeb-app>.koyeb.app/api/v1`
-   - `NEXT_PUBLIC_SOCKET_URL = https://<koyeb-app>.koyeb.app`
+3. **Environment Variables** — add the `# ---- VERCEL ----` vars from `.env.deploy.local`, replacing `<render-app>` with your real Render URL:
+   - `NEXT_PUBLIC_API_URL = https://<render-app>.onrender.com/api/v1`
+   - `NEXT_PUBLIC_SOCKET_URL = https://<render-app>.onrender.com`
    - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME = duq485wsm`
    - `NEXT_PUBLIC_AI_PUBLIC_KEY = <the AI public key>`
 4. Deploy. Copy the Vercel URL, e.g. `https://couple-chat.vercel.app`.
 
 ## Step 5 — Connect the two (CORS) (2 min)
-1. Back in **Koyeb → your service → Environment variables**, set:
+1. Back in **Render → your service → Environment**, set:
    - `CLIENT_URL = https://<your-vercel-url>`  (no trailing slash; comma-separate if you add more origins)
-2. Redeploy the Koyeb service so CORS allows the Vercel origin.
+2. Save — Render redeploys automatically so CORS allows the Vercel origin.
 3. Open the Vercel URL and sign up. 🎉
 
 ---
 
 ## How the pieces talk
-- Browser (Vercel) → REST + WebSocket → Koyeb API (`NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SOCKET_URL`).
-- The CSP `connect-src` is derived from `NEXT_PUBLIC_SOCKET_URL`, so the Koyeb origin (https + wss) is allowed automatically.
-- Auth cookie is `SameSite=None; Secure` in production so it works cross-site (Vercel ↔ Koyeb). This needs HTTPS — both platforms provide it.
+- Browser (Vercel) → REST + WebSocket → Render API (`NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SOCKET_URL`).
+- The CSP `connect-src` is derived from `NEXT_PUBLIC_SOCKET_URL`, so the Render origin (https + wss) is allowed automatically.
+- Auth cookie is `SameSite=None; Secure` in production so it works cross-site (Vercel ↔ Render). This needs HTTPS — both platforms provide it.
 
 ## Gotchas
-- **OpenAI key is a placeholder.** AI mood insights stay off until you set a real `OPENAI_API_KEY` on Koyeb. Core encrypted chat does not need it.
-- **Upstash must be the `rediss://` TCP URL**, not the REST URL — BullMQ uses blocking Redis commands.
-- **Free Nano = 512 MB.** Fine for the two of you; not for scale.
+- **OpenAI key is a placeholder.** AI mood insights stay off until you set a real `OPENAI_API_KEY` on Render. Core encrypted chat does not need it.
+- **Upstash must be the `rediss://` TCP URL** (ioredis/Node tab), NOT the `UPSTASH_REDIS_REST_URL`/token — BullMQ + the Socket.io adapter use blocking Redis commands the REST API can't serve.
+- **Render free sleeps after ~15 min idle** — first hit wakes in ~30–60s. Upgrade to Starter ($7) for always-on.
 - **First request after a deploy** can be a few seconds while libsodium/WASM warms up.
 - This is a **different MongoDB** than your local test data — you and your partner sign up fresh on the deployed site.
 
 ## Updating later
-Push to `main` → Koyeb and Vercel both auto-redeploy from GitHub.
+Push to `main` → Render and Vercel both auto-redeploy from GitHub.
