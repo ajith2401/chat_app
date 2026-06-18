@@ -3,10 +3,14 @@ import * as authService from "../services/authService";
 import { signupSchema, loginSchema } from "@couple-chat/validation";
 import { AuthRequest, revokeToken } from "../../../middleware/authMiddleware";
 
+// In production the web (Vercel) and API (Koyeb) live on different sites, so the
+// auth cookie must be SameSite=None + Secure to be sent cross-site. Locally we
+// keep Strict for CSRF hardening.
+const isProd = process.env.NODE_ENV === "production";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "strict" as const,
+  secure: isProd,
+  sameSite: (isProd ? "none" : "strict") as "none" | "strict",
   maxAge: 7 * 24 * 60 * 60 * 1000,
   path: "/",
 };

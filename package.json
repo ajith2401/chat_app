@@ -5,11 +5,14 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "start:backend": "concurrently --kill-others-on-fail --names api,worker \"tsx apps/api/src/index.ts\" \"tsx apps/worker/src/index.ts\""
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "concurrently": "^9.1.0",
     "prettier": "^3.2.5",
+    "tsx": "^4.7.2",
     "turbo": "latest"
   },
   "packageManager": "npm@10.7.0",
