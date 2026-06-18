@@ -49,6 +49,7 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
 
   // Encrypted images: fetch ciphertext, decrypt to an in-memory blob URL.
   const [imgSrc, setImgSrc] = useState<string | null>(null);
+  const [imgFailed, setImgFailed] = useState(false);
   useEffect(() => {
     if (type !== "image" || !mediaUrl) return;
     if (!message.mediaKey) {
@@ -62,15 +63,17 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
     }
     let objectUrl: string | null = null;
     let cancelled = false;
+    setImgFailed(false);
     (async () => {
       try {
         const res = await fetch(mediaUrl);
+        if (!res.ok) throw new Error(`fetch ${res.status}`);
         const buf = new Uint8Array(await res.arrayBuffer());
         const plain = decryptImageBlob(buf, message.mediaKey);
         objectUrl = URL.createObjectURL(new Blob([plain as BlobPart]));
         if (!cancelled) setImgSrc(objectUrl);
       } catch {
-        if (!cancelled) setImgSrc(null);
+        if (!cancelled) { setImgSrc(null); setImgFailed(true); }
       }
     })();
     return () => {
@@ -136,7 +139,7 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
                 />
               ) : (
                 <div className="rounded-xl h-40 w-56 bg-white/5 flex items-center justify-center text-[10px] uppercase tracking-widest text-white/30">
-                  Decrypting…
+                  {imgFailed ? "Couldn't load image" : "Decrypting…"}
                 </div>
               )}
             </div>

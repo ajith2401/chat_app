@@ -30,6 +30,9 @@ export default function RootLayout({
     apiOrigin,
     wsOrigin,
     "https://api.cloudinary.com",
+    // Encrypted images are fetched (ciphertext) from the delivery host before
+    // being decrypted client-side, so the delivery host must be in connect-src.
+    "https://res.cloudinary.com",
   ].join(" ");
   // blob: in img-src lets decrypted images render from in-memory blob URLs.
   const csp = `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com https://cloudinary.com; connect-src ${connectSrc};`;
