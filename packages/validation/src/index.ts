@@ -81,6 +81,15 @@ export const batchSeenSchema = z.object({
   messageIds: z.array(z.string().min(1)).min(1).max(100),
 });
 
+export const reactMessageSchema = z.object({
+  messageId: z.string().min(1),
+  emojiEnc: z.record(z.string(), z.any()),
+});
+
+export const unreactMessageSchema = z.object({
+  messageId: z.string().min(1),
+});
+
 export const presenceStatusSchema = z.object({
   status: z.enum(["online", "offline", "away", "busy"]),
 });

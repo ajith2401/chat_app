@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Check, CheckCheck, Reply as ReplyIcon, AlertCircle, RotateCcw } from "lucide-react";
-import { decryptIncoming, decryptImageBlob } from "../lib/crypto-client";
+import { Check, CheckCheck, Reply as ReplyIcon, AlertCircle, RotateCcw, SmilePlus } from "lucide-react";
+import { decryptIncoming, decryptImageBlob, decryptReactionEmoji } from "../lib/crypto-client";
+
+const REACTION_CHOICES = ["❤️", "😂", "😮", "😢", "🔥", "👍"];
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -17,6 +19,9 @@ interface ChatBubbleProps {
   onReply?: (message: any) => void;
   onRetry?: (message: any) => void;
   onVisible?: () => void;
+  onReact?: (messageId: string, emoji: string) => void;
+  onUnreact?: (messageId: string) => void;
+  currentUserId?: string | null;
 }
 
 // Detect messages that are purely 1–3 emoji characters for large rendering
@@ -36,7 +41,7 @@ const isEmojiOnly = (text: string) => {
   });
 };
 
-export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: ChatBubbleProps) => {
+export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReact, onUnreact, currentUserId }: ChatBubbleProps) => {
   const { status, createdAt, type, mediaUrl, replyTo, failed, isOptimistic } = message;
   const timestamp = new Date(createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -82,6 +87,21 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
     };
   }, [type, mediaUrl, message.mediaKey]);
 
+  // --- Reactions ---
+  const [showPicker, setShowPicker] = useState(false);
+  const canReact = !!message._id && !String(message._id).startsWith("temp-");
+  const reactions: Array<{ userId: string; emoji: string }> = (message.reactions || [])
+    .map((r: any) => ({ userId: String(r.userId), emoji: decryptReactionEmoji(r.emojiEnc) }))
+    .filter((r: any) => r.emoji);
+  const myEmoji = reactions.find((r) => r.userId === String(currentUserId))?.emoji || null;
+
+  const react = (emoji: string) => {
+    if (!canReact) return;
+    setShowPicker(false);
+    if (myEmoji === emoji) onUnreact?.(message._id);
+    else onReact?.(message._id, emoji);
+  };
+
   useEffect(() => {
     if (isOwn || !onVisible || !bubbleRef.current) return;
     const observer = new IntersectionObserver(
@@ -107,6 +127,8 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
     >
       <div className={cn("flex items-center gap-2 w-full", isOwn ? "flex-row-reverse" : "flex-row")}>
         <div
+          onDoubleClick={() => react("❤️")}
+          title={canReact ? "Double-tap to ❤️" : undefined}
           className={cn(
             "rounded-[1.25rem] text-[13px] leading-relaxed relative overflow-hidden transition-all duration-300",
             emojiOnly
@@ -155,14 +177,63 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible }: Chat
           </div>
         </div>
 
-        {/* Quick Reply Button */}
-        <button 
-          onClick={() => onReply?.(message)}
-          className="p-2 rounded-full hover:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity text-white/20 hover:text-white/60"
-        >
-          <ReplyIcon className="w-4 h-4" />
-        </button>
+        {/* Hover controls: reply + react */}
+        <div className="relative flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => onReply?.(message)}
+            className="p-2 rounded-full hover:bg-white/5 text-white/20 hover:text-white/60"
+            title="Reply"
+          >
+            <ReplyIcon className="w-4 h-4" />
+          </button>
+          {canReact && (
+            <button
+              onClick={() => setShowPicker((v) => !v)}
+              className="p-2 rounded-full hover:bg-white/5 text-white/20 hover:text-white/60"
+              title="React"
+            >
+              <SmilePlus className="w-4 h-4" />
+            </button>
+          )}
+          {showPicker && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setShowPicker(false)} />
+              <div className={cn(
+                "absolute z-20 -top-12 flex items-center gap-1 px-2 py-1.5 rounded-full bg-neutral-900/95 border border-white/10 shadow-2xl backdrop-blur",
+                isOwn ? "right-0" : "left-0"
+              )}>
+                {REACTION_CHOICES.map((e) => (
+                  <button key={e} onClick={() => react(e)}
+                    className={cn("text-lg leading-none p-1 rounded-full hover:scale-125 transition-transform", myEmoji === e && "bg-white/10")}>
+                    {e}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* Reaction chips */}
+      {reactions.length > 0 && (
+        <div className={cn("flex flex-wrap gap-1 -mt-0.5", isOwn ? "self-end pr-1" : "self-start pl-1")}>
+          {Object.entries(
+            reactions.reduce((acc: Record<string, number>, r) => { acc[r.emoji] = (acc[r.emoji] || 0) + 1; return acc; }, {})
+          ).map(([emoji, count]) => (
+            <button
+              key={emoji}
+              onClick={() => react(emoji)}
+              className={cn(
+                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border transition-all",
+                myEmoji === emoji ? "bg-rose-500/20 border-rose-400/30" : "bg-white/5 border-white/10 hover:bg-white/10"
+              )}
+            >
+              <span className="leading-none">{emoji}</span>
+              {count > 1 && <span className="text-white/50 font-bold">{count}</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {failed && isOwn && (
         <div className="flex items-center gap-2 px-1 mt-1">

@@ -3,7 +3,7 @@ import { Socket, Server } from "socket.io";
 import { markMessagesAsSeen } from "../../domains/messaging/services/messageService";
 import { addAIJob } from "../../lib/queue";
 import { sendPushToUser } from "../../domains/notifications/services/pushService";
-import { sendMessageSchema, messageSeenSchema, batchSeenSchema } from "@couple-chat/validation";
+import { sendMessageSchema, messageSeenSchema, batchSeenSchema, reactMessageSchema, unreactMessageSchema } from "@couple-chat/validation";
 
 export const messageHandlers = (io: Server, socket: Socket) => {
   const user = (socket as any).user;
@@ -98,6 +98,45 @@ export const messageHandlers = (io: Server, socket: Socket) => {
       io.to(relationshipRoom).emit("all_messages_seen", { seenAt: new Date(), seenBy: user._id });
     } catch {
       socket.emit("error", { message: "Failed to mark messages as seen" });
+    }
+  });
+
+  // --- Reactions: one (encrypted) reaction per user per message ---
+  socket.on("react_message", async (data: any) => {
+    try {
+      const parsed = reactMessageSchema.safeParse(data);
+      if (!parsed.success) return;
+      const { messageId, emojiEnc } = parsed.data;
+      const msg = await Message.findOneAndUpdate(
+        { _id: messageId, relationshipId: user.relationshipId },
+        { $pull: { reactions: { userId: user._id } } },
+        { new: false }
+      );
+      if (!msg) return;
+      const updated = await Message.findByIdAndUpdate(
+        messageId,
+        { $push: { reactions: { userId: user._id, emojiEnc } } },
+        { new: true }
+      ).select("reactions");
+      io.to(relationshipRoom).emit("message_reactions", { messageId, reactions: updated?.reactions ?? [] });
+    } catch {
+      /* ignore */
+    }
+  });
+
+  socket.on("unreact_message", async (data: any) => {
+    try {
+      const parsed = unreactMessageSchema.safeParse(data);
+      if (!parsed.success) return;
+      const { messageId } = parsed.data;
+      const updated = await Message.findOneAndUpdate(
+        { _id: messageId, relationshipId: user.relationshipId },
+        { $pull: { reactions: { userId: user._id } } },
+        { new: true }
+      ).select("reactions");
+      if (updated) io.to(relationshipRoom).emit("message_reactions", { messageId, reactions: updated.reactions });
+    } catch {
+      /* ignore */
     }
   });
 

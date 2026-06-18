@@ -5,7 +5,7 @@ import { usePresenceStore } from "../store/usePresenceStore";
 
 export const useSocket = (authenticated: boolean) => {
   const socketRef = useRef<Socket | null>(null);
-  const { addMessage, updateMessage, removeMessage, setMessageFailed, setTyping, setCurrentUserId, markAllSeen } = useChatStore();
+  const { addMessage, updateMessage, removeMessage, setMessageFailed, setReactions, setTyping, setCurrentUserId, markAllSeen } = useChatStore();
   const { setPartnerStatus, setCurrentVibe } = usePresenceStore();
 
   useEffect(() => {
@@ -59,6 +59,10 @@ export const useSocket = (authenticated: boolean) => {
       messageIds.forEach((id) => updateMessage(id, { status: { seenAt } } as any));
     });
 
+    socket.on("message_reactions", ({ messageId, reactions }: { messageId: string; reactions: any[] }) => {
+      setReactions(messageId, reactions);
+    });
+
     const heartbeatInterval = setInterval(() => {
       socket.emit("heartbeat");
     }, 30000);
@@ -67,7 +71,15 @@ export const useSocket = (authenticated: boolean) => {
       clearInterval(heartbeatInterval);
       socket.disconnect();
     };
-  }, [authenticated, addMessage, updateMessage, removeMessage, setMessageFailed, setTyping, setPartnerStatus, setCurrentVibe, setCurrentUserId, markAllSeen]);
+  }, [authenticated, addMessage, updateMessage, removeMessage, setMessageFailed, setReactions, setTyping, setPartnerStatus, setCurrentVibe, setCurrentUserId, markAllSeen]);
+
+  const reactToMessage = useCallback((messageId: string, emojiEnc: unknown) => {
+    socketRef.current?.emit("react_message", { messageId, emojiEnc });
+  }, []);
+
+  const unreactFromMessage = useCallback((messageId: string) => {
+    socketRef.current?.emit("unreact_message", { messageId });
+  }, []);
 
   const sendMessage = (
     content: string,
@@ -123,5 +135,5 @@ export const useSocket = (authenticated: boolean) => {
     }
   }, []);
 
-  return { sendMessage, sendTyping, markAsSeen, markAllAsSeen, retryMessage };
+  return { sendMessage, sendTyping, markAsSeen, markAllAsSeen, retryMessage, reactToMessage, unreactFromMessage };
 };

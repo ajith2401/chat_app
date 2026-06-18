@@ -11,6 +11,7 @@ export interface Message {
   mediaUrl?: string;
   enc?: { v: number; alg: string; nonce: string } | null;
   mediaKey?: Record<string, unknown> | null;
+  reactions?: Array<{ userId: string; emojiEnc?: Record<string, unknown> }>;
   replyTo?: Message | null;
   status: {
     sentAt: string;
@@ -33,6 +34,7 @@ interface ChatState {
   updateMessage: (clientGeneratedId: string, updates: Partial<Message>) => void;
   removeMessage: (clientGeneratedId: string) => void;
   setMessageFailed: (clientGeneratedId: string) => void;
+  setReactions: (messageId: string, reactions: Array<{ userId: string; emojiEnc?: Record<string, unknown> }>) => void;
   markAllSeen: (seenAt: string) => void;
   setMessages: (messages: Message[]) => void;
   setTyping: (isTyping: boolean, name?: string | null) => void;
@@ -71,6 +73,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: state.messages.map((m) =>
         m.clientGeneratedId === clientGeneratedId ? { ...m, failed: true, isOptimistic: false } : m
       ),
+    })),
+  setReactions: (messageId, reactions) =>
+    set((state) => ({
+      messages: state.messages.map((m) => (m._id === messageId ? { ...m, reactions } : m)),
     })),
   markAllSeen: (seenAt) =>
     set((state) => {

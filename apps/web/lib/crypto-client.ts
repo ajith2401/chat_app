@@ -22,6 +22,8 @@ import {
   openCK,
   encryptMessage,
   decryptMessage,
+  encryptReaction,
+  decryptReaction,
   encryptFile,
   decryptFile,
   wrapFileKey,
@@ -290,6 +292,20 @@ export function decryptImageBlob(payload: Uint8Array, mediaKey: Record<string, u
   const sealed = JSON.parse(new TextDecoder().decode(payload)) as Sealed;
   const fileKey = unwrapFileKey(ck, mediaKey as unknown as Sealed);
   return decryptFile(sealed, fileKey);
+}
+
+export function encryptReactionEmoji(emoji: string): Record<string, unknown> {
+  if (!ck) throw new Error("CK not available");
+  return encryptReaction(ck, emoji) as unknown as Record<string, unknown>;
+}
+
+export function decryptReactionEmoji(emojiEnc: unknown): string {
+  if (!ck || !emojiEnc) return "";
+  try {
+    return decryptReaction(ck, emojiEnc as Sealed);
+  } catch {
+    return "";
+  }
 }
 
 /** Seal CK to the server AI public key for the opt-in AI bridge. */

@@ -18,7 +18,7 @@ import { BottomNav } from "../../components/BottomNav";
 import { useInView } from "react-intersection-observer";
 import api from "../../lib/api";
 import { Skeleton } from "../../components/Skeleton";
-import { encryptOutgoing, encryptImage, decryptIncoming } from "../../lib/crypto-client";
+import { encryptOutgoing, encryptImage, decryptIncoming, encryptReactionEmoji } from "../../lib/crypto-client";
 import { UnlockScreen } from "../../components/UnlockScreen";
 
 export default function ChatPage() {
@@ -43,7 +43,11 @@ export default function ChatPage() {
   const { user, loading: authLoading } = useAuth();
   const { status: cryptoStatus, unlock, restore, error: cryptoError } = useCrypto();
 
-  const { sendMessage, sendTyping, markAsSeen, markAllAsSeen, retryMessage } = useSocket(!!user);
+  const { sendMessage, sendTyping, markAsSeen, markAllAsSeen, retryMessage, reactToMessage, unreactFromMessage } = useSocket(!!user);
+
+  const handleReact = useCallback((messageId: string, emoji: string) => {
+    try { reactToMessage(messageId, encryptReactionEmoji(emoji)); } catch { /* CK not ready */ }
+  }, [reactToMessage]);
   
   const [showNewMessageBadge, setShowNewMessageBadge] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -332,9 +336,12 @@ export default function ChatPage() {
                         <ChatBubble
                           message={msg}
                           isOwn={isOwn}
+                          currentUserId={currentUserId}
                           onReply={setReplyTo}
                           onRetry={msg.failed ? retryMessage : undefined}
                           onVisible={needsSeen ? () => markAsSeen(msg._id) : undefined}
+                          onReact={handleReact}
+                          onUnreact={unreactFromMessage}
                         />
                       </div>
                     );
