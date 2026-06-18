@@ -9,6 +9,7 @@ import { BottomNav } from "../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../lib/api";
 import { AIConsentCard } from "../../components/AIConsentCard";
+import { NotificationsCard } from "../../components/NotificationsCard";
 
 interface Partner {
   _id: string;
@@ -309,6 +310,9 @@ export default function SettingsPage() {
             <p className="text-sm text-white/30 italic text-center py-4">No relationship found.</p>
           )}
         </GlassContainer>
+
+        {/* ── Notifications ── */}
+        <NotificationsCard />
 
         {/* ── AI consent (E2EE opt-in) ── */}
         {user?.relationshipId && <AIConsentCard />}

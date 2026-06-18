@@ -26,6 +26,8 @@ export interface IUser extends Document {
   emailVerifyToken?: string;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
+  // --- Web Push subscriptions (one per browser/device that opted in) ---
+  pushSubscriptions: Array<{ endpoint: string; keys: { p256dh: string; auth: string } }>;
   createdAt: Date;
 }
 
@@ -55,6 +57,7 @@ const UserSchema: Schema = new Schema({
   emailVerifyToken: { type: String },
   passwordResetToken: { type: String },
   passwordResetExpires: { type: Date },
+  pushSubscriptions: { type: [Schema.Types.Mixed], default: [] },
   createdAt: { type: Date, default: Date.now },
 });
 

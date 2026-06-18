@@ -18,6 +18,7 @@ import mediaRoutes from "./domains/media/routes/mediaRoutes";
 import memoryRoutes from "./domains/ai-memory/routes/memoryRoutes";
 import journalRoutes from "./domains/journals/routes/journalRoutes";
 import keysRoutes from "./domains/keys/routes/keysRoutes";
+import notificationsRoutes from "./domains/notifications/routes/notificationsRoutes";
 
 const logger = pino({
   transport: {
@@ -79,6 +80,7 @@ app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1/memories", memoryRoutes);
 app.use("/api/v1/journals", journalRoutes);
 app.use("/api/v1/keys", keysRoutes);
+app.use("/api/v1/notifications", notificationsRoutes);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });

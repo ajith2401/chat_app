@@ -2,6 +2,7 @@ import { Message, Relationship } from "@couple-chat/database";
 import { Socket, Server } from "socket.io";
 import { markMessagesAsSeen } from "../../domains/messaging/services/messageService";
 import { addAIJob } from "../../lib/queue";
+import { sendPushToUser } from "../../domains/notifications/services/pushService";
 import { sendMessageSchema, messageSeenSchema, batchSeenSchema } from "@couple-chat/validation";
 
 export const messageHandlers = (io: Server, socket: Socket) => {
@@ -35,16 +36,30 @@ export const messageHandlers = (io: Server, socket: Socket) => {
 
       io.to(relationshipRoom).emit("receive_message", message);
 
+      // One lookup for both the AI gate and finding the partner to notify.
+      const rel = await Relationship.findById(user.relationshipId).select("wrappedCKForAI user1Id user2Id");
+
       // Enqueue AI job only when this couple has opted in (CK sealed to AI key).
-      // The worker fetches ciphertext + CK itself, so we pass only ids.
-      if (type === "text") {
-        const rel = await Relationship.findById(user.relationshipId).select("wrappedCKForAI");
-        if (rel?.wrappedCKForAI) {
-          addAIJob({
-            messageId: message._id.toString(),
-            relationshipId: user.relationshipId.toString(),
-          }).catch(() => {});
-        }
+      if (type === "text" && rel?.wrappedCKForAI) {
+        addAIJob({
+          messageId: message._id.toString(),
+          relationshipId: user.relationshipId.toString(),
+        }).catch(() => {});
+      }
+
+      // Web push to the partner — generic (no plaintext; messages are E2E-encrypted).
+      const partnerId =
+        rel?.user1Id?.toString() === user._id.toString() ? rel?.user2Id : rel?.user1Id;
+      if (partnerId) {
+        const body =
+          type === "image" ? "📷 Sent you a photo" :
+          type === "voice" ? "🎙️ Sent a voice note" :
+          "💜 New whisper for you";
+        sendPushToUser(partnerId.toString(), {
+          title: user.name || "Your partner",
+          body,
+          url: "/chat",
+        }).catch(() => {});
       }
 
       if (ack) ack({ ok: true });
