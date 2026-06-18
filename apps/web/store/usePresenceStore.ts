@@ -6,6 +6,7 @@ interface PresenceState {
   currentVibe: string;
   currentIntensity: number;
   partnerName: string | null;
+  partnerAvatar: string | null;
   relationshipStatus: "pending" | "active" | null;
   setPartnerStatus: (status: string) => void;
   setCurrentVibe: (mood: string, intensity?: number) => void;
@@ -17,6 +18,7 @@ export const usePresenceStore = create<PresenceState>((set) => ({
   currentVibe: "neutral",
   currentIntensity: 0.5,
   partnerName: null,
+  partnerAvatar: null,
   relationshipStatus: null,
   setPartnerStatus: (status) => set({ partnerStatus: status }),
   setCurrentVibe: (mood, intensity = 0.5) => set({ currentVibe: mood, currentIntensity: intensity }),
@@ -28,6 +30,7 @@ export const usePresenceStore = create<PresenceState>((set) => ({
       set({
         relationshipStatus: rel.status,
         partnerName: partner?.name || "Partner",
+        partnerAvatar: partner?.avatarUrl || null,
         partnerStatus: partner?.presenceStatus || "offline",
         currentVibe: rel.currentMood || "neutral",
         currentIntensity: rel.lastEmotionIntensity ?? 0.5,

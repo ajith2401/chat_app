@@ -18,7 +18,7 @@ import { BottomNav } from "../../components/BottomNav";
 import { useInView } from "react-intersection-observer";
 import api from "../../lib/api";
 import { Skeleton } from "../../components/Skeleton";
-import { encryptOutgoing, encryptImage } from "../../lib/crypto-client";
+import { encryptOutgoing, encryptImage, decryptIncoming } from "../../lib/crypto-client";
 import { UnlockScreen } from "../../components/UnlockScreen";
 
 export default function ChatPage() {
@@ -37,6 +37,7 @@ export default function ChatPage() {
   const hasMore = useChatStore((s) => s.hasMore);
   const partnerStatus = usePresenceStore((s) => s.partnerStatus);
   const partnerName = usePresenceStore((s) => s.partnerName);
+  const partnerAvatar = usePresenceStore((s) => s.partnerAvatar);
   const relationshipStatus = usePresenceStore((s) => s.relationshipStatus);
   const fetchRelationship = usePresenceStore((s) => s.fetchRelationship);
   const { user, loading: authLoading } = useAuth();
@@ -278,7 +279,10 @@ export default function ChatPage() {
               <div className="relative group cursor-pointer">
                 <div className={`absolute -inset-1.5 rounded-full bg-gradient-to-tr from-rose-500 to-indigo-600 blur-md opacity-40 transition-all duration-1000 ${partnerStatus === "online" ? "scale-110 opacity-70 animate-pulse" : "scale-90 opacity-0"}`} />
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-neutral-900 border border-white/10 relative z-10 flex items-center justify-center overflow-hidden transition-transform duration-500 group-hover:scale-105 text-white/20 font-serif text-xl sm:text-2xl tracking-tighter italic">
-                  {partnerName?.charAt(0) || "Us"}
+                  {partnerAvatar
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={partnerAvatar} alt={partnerName || "Partner"} className="w-full h-full object-cover" />
+                    : (partnerName?.charAt(0) || "Us")}
                 </div>
                 <div className={`absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full border-[3px] border-[#0a0a0a] z-20 shadow-lg ${partnerStatus === "online" ? "bg-emerald-500" : "bg-neutral-600"}`} />
               </div>
@@ -364,7 +368,7 @@ export default function ChatPage() {
                 >
                   <div className="flex flex-col gap-1 border-l-2 border-rose-500/50 pl-4 overflow-hidden">
                     <span className="text-[9px] uppercase tracking-widest text-rose-400 font-black">Replying to whispering...</span>
-                    <p className="text-xs text-white/40 truncate italic">"{replyingTo.content}"</p>
+                    <p className="text-xs text-white/40 truncate italic">"{decryptIncoming(replyingTo)}"</p>
                   </div>
                   <button onClick={() => setReplyTo(null)} className="p-2 rounded-full hover:bg-white/5 text-white/20 transition-all"><X className="w-4 h-4" /></button>
                 </motion.div>

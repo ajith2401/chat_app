@@ -3,8 +3,8 @@
 import { AmbientBackground } from "../../components/AmbientBackground";
 import { GlassContainer } from "../../components/GlassContainer";
 import { useAuth } from "../../contexts/AuthContext";
-import { LogOut, User, Shield, Bell, Heart, Copy, Check, Edit2, Save, X, Wifi, WifiOff } from "lucide-react";
-import { useState, useEffect } from "react";
+import { LogOut, User, Shield, Bell, Heart, Copy, Check, Edit2, Save, X, Wifi, WifiOff, Camera, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { BottomNav } from "../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../lib/api";
@@ -68,6 +68,44 @@ export default function SettingsPage() {
     }
   };
 
+  // Profile picture upload. Avatars are shown directly to your partner and across
+  // the app, so they are stored as normal (unencrypted) Cloudinary images.
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+      setAvatarError("JPG, PNG, WebP or GIF only"); setTimeout(() => setAvatarError(null), 3000); return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("Max 5 MB"); setTimeout(() => setAvatarError(null), 3000); return;
+    }
+    setUploadingAvatar(true);
+    setAvatarError(null);
+    try {
+      const { data: sig } = await api.post("/media/request-upload", { folder: "avatars" });
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("api_key", sig.apiKey);
+      fd.append("timestamp", sig.timestamp.toString());
+      fd.append("signature", sig.signature);
+      fd.append("folder", sig.folder);
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`, { method: "POST", body: fd });
+      const data = await res.json();
+      if (!data.secure_url) throw new Error(data.error?.message || "Upload failed");
+      await api.patch("/auth/me", { avatarUrl: data.secure_url });
+      await refreshUser();
+    } catch (err: any) {
+      setAvatarError(err.message || "Upload failed"); setTimeout(() => setAvatarError(null), 3000);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const avatarLetter = (n?: string) => (n || "?").charAt(0).toUpperCase();
 
   return (
@@ -84,10 +122,25 @@ export default function SettingsPage() {
         <GlassContainer className="p-8 sm:p-10 flex flex-col gap-8" intensity="medium">
           <div className="flex items-center gap-6">
             <div className="relative flex-shrink-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-br from-rose-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center text-white/50 font-serif text-3xl shadow-xl">
-                {avatarLetter(user?.name)}
-              </div>
-              <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-[2.5px] border-[#050505] shadow" />
+              <input type="file" ref={avatarInputRef} className="hidden" accept="image/*" onChange={handleAvatarUpload} />
+              <button
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className="group relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border border-white/10 shadow-xl flex items-center justify-center bg-gradient-to-br from-rose-500/20 to-indigo-500/20 text-white/50 font-serif text-3xl"
+                title="Change profile photo"
+              >
+                {user?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.avatarUrl} alt="You" className="w-full h-full object-cover" />
+                ) : (
+                  avatarLetter(user?.name)
+                )}
+                <span className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  {uploadingAvatar ? <Loader2 className="w-5 h-5 text-white animate-spin" /> : <Camera className="w-5 h-5 text-white/90" />}
+                </span>
+              </button>
+              <div className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full bg-emerald-500 border-[2.5px] border-[#050505] shadow pointer-events-none" />
+              {avatarError && <p className="absolute -bottom-6 left-0 whitespace-nowrap text-[9px] text-rose-400 uppercase tracking-wider font-bold">{avatarError}</p>}
             </div>
 
             <div className="flex-1 min-w-0">
@@ -143,8 +196,11 @@ export default function SettingsPage() {
               <div className="flex items-center justify-center gap-4 py-3">
                 {/* My avatar */}
                 <div className="flex flex-col items-center gap-2">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center text-white/60 font-serif text-xl">
-                    {avatarLetter(user?.name)}
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-rose-500/20 to-indigo-500/20 border border-white/10 flex items-center justify-center text-white/60 font-serif text-xl overflow-hidden">
+                    {user?.avatarUrl
+                      // eslint-disable-next-line @next/next/no-img-element
+                      ? <img src={user.avatarUrl} alt="You" className="w-full h-full object-cover" />
+                      : avatarLetter(user?.name)}
                   </div>
                   <span className="text-[10px] text-white/40 font-medium tracking-wide truncate max-w-[70px] text-center">{user?.name}</span>
                 </div>
@@ -162,8 +218,11 @@ export default function SettingsPage() {
                 {/* Partner avatar */}
                 <div className="flex flex-col items-center gap-2">
                   <div className="relative">
-                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-violet-500/20 to-rose-500/20 border border-white/10 flex items-center justify-center text-white/60 font-serif text-xl">
-                      {avatarLetter(rel.partner.name)}
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-br from-violet-500/20 to-rose-500/20 border border-white/10 flex items-center justify-center text-white/60 font-serif text-xl overflow-hidden">
+                      {(rel.partner as any).avatarUrl
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={(rel.partner as any).avatarUrl} alt={rel.partner.name} className="w-full h-full object-cover" />
+                        : avatarLetter(rel.partner.name)}
                     </div>
                     <div className={`absolute bottom-0.5 right-0.5 w-3.5 h-3.5 rounded-full border-[2.5px] border-[#050505] ${rel.partner.presenceStatus === "online" ? "bg-emerald-500" : "bg-neutral-600"}`} />
                   </div>
