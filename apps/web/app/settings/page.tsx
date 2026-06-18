@@ -106,6 +106,11 @@ export default function SettingsPage() {
     }
   };
 
+  const [verifySent, setVerifySent] = useState(false);
+  const resendVerification = async () => {
+    try { await api.post("/auth/resend-verification"); setVerifySent(true); } catch { /* ignore */ }
+  };
+
   const avatarLetter = (n?: string) => (n || "?").charAt(0).toUpperCase();
 
   return (
@@ -182,6 +187,24 @@ export default function SettingsPage() {
             </div>
           </div>
         </GlassContainer>
+
+        {/* ── Email verification banner ── */}
+        {user && user.emailVerified === false && (
+          <GlassContainer className="p-5 sm:p-6 flex items-center justify-between gap-4" intensity="low">
+            <div className="flex items-center gap-3 min-w-0">
+              <Shield className="w-5 h-5 text-amber-400/70 flex-shrink-0" />
+              <p className="text-xs text-white/50 leading-relaxed">
+                {verifySent ? "Verification email sent — check your inbox." : "Your email isn't verified yet."}
+              </p>
+            </div>
+            {!verifySent && (
+              <button onClick={resendVerification}
+                className="flex-shrink-0 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-all">
+                Resend
+              </button>
+            )}
+          </GlassContainer>
+        )}
 
         {/* ── Relationship / partner card ── */}
         <GlassContainer className="p-8 sm:p-10 flex flex-col gap-6" intensity="medium">

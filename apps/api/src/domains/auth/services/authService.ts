@@ -1,7 +1,12 @@
 import { User } from "@couple-chat/database";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { LoginInput, SignupInput } from "@couple-chat/validation";
+
+// Tokens are emailed in the clear but stored hashed, so a DB leak can't be replayed.
+const genToken = () => crypto.randomBytes(32).toString("hex");
+const hashToken = (t: string) => crypto.createHash("sha256").update(t).digest("hex");
 
 export const jwtSecret = () => {
   const secret = process.env.JWT_SECRET;
@@ -26,10 +31,59 @@ export const signup = async (input: SignupInput) => {
   if (existingUser) throw new Error("User already exists");
 
   const passwordHash = await bcrypt.hash(input.password, 10);
-  const user = new User({ email: input.email, passwordHash, name: input.name });
+  const verifyToken = genToken();
+  const user = new User({
+    email: input.email,
+    passwordHash,
+    name: input.name,
+    emailVerifyToken: hashToken(verifyToken),
+  });
   await user.save();
 
-  return { user: safeUser(user), rawId: user._id.toString() };
+  // verifyToken (raw) is returned so the controller can email it; never stored raw.
+  return { user: safeUser(user), rawId: user._id.toString(), verifyToken };
+};
+
+export const verifyEmail = async (token: string) => {
+  if (!token) return false;
+  const user = await User.findOne({ emailVerifyToken: hashToken(token) });
+  if (!user) return false;
+  user.emailVerified = true;
+  user.emailVerifyToken = undefined;
+  await user.save();
+  return true;
+};
+
+export const issueVerifyToken = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user || user.emailVerified) return null;
+  const verifyToken = genToken();
+  user.emailVerifyToken = hashToken(verifyToken);
+  await user.save();
+  return { email: user.email, verifyToken };
+};
+
+export const requestPasswordReset = async (email: string) => {
+  const user = await User.findOne({ email });
+  if (!user) return null; // caller still responds 200 (don't leak existence)
+  const resetToken = genToken();
+  user.passwordResetToken = hashToken(resetToken);
+  user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1h
+  await user.save();
+  return { email: user.email, resetToken };
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+  const user = await User.findOne({
+    passwordResetToken: hashToken(token),
+    passwordResetExpires: { $gt: new Date() },
+  });
+  if (!user) throw new Error("Invalid or expired reset link");
+  user.passwordHash = await bcrypt.hash(newPassword, 10);
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+  return true;
 };
 
 export const login = async (input: LoginInput) => {

@@ -11,6 +11,15 @@ export const signupSchema = z.object({
   name: z.string().min(2),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(10),
+  password: z.string().min(8),
+});
+
 // --- E2EE envelope shapes (mirror @couple-chat/crypto) ---
 export const encEnvelopeSchema = z.object({
   v: z.number().int(),

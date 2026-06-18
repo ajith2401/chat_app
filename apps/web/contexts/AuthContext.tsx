@@ -10,6 +10,7 @@ interface User {
   name: string;
   avatarUrl?: string;
   relationshipId?: string;
+  emailVerified?: boolean;
 }
 
 interface AuthContextType {

@@ -21,6 +21,11 @@ export interface IUser extends Document {
   wrappedIdPrivByPassword?: Record<string, unknown>;
   wrappedIdPrivByRecovery?: Record<string, unknown>;
   devices: IDevice[];
+  // --- Email verification + password reset (tokens stored hashed) ---
+  emailVerified: boolean;
+  emailVerifyToken?: string;
+  passwordResetToken?: string;
+  passwordResetExpires?: Date;
   createdAt: Date;
 }
 
@@ -46,6 +51,10 @@ const UserSchema: Schema = new Schema({
   wrappedIdPrivByPassword: { type: Schema.Types.Mixed },
   wrappedIdPrivByRecovery: { type: Schema.Types.Mixed },
   devices: { type: [DeviceSchema], default: [] },
+  emailVerified: { type: Boolean, default: false },
+  emailVerifyToken: { type: String },
+  passwordResetToken: { type: String },
+  passwordResetExpires: { type: Date },
   createdAt: { type: Date, default: Date.now },
 });
 

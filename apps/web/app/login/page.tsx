@@ -87,6 +87,9 @@ export default function LoginPage() {
           >
             {loading ? "Connecting..." : "Enter Space"}
           </button>
+          <Link href="/forgot-password" className="text-center text-white/30 hover:text-white/60 text-[10px] uppercase tracking-[0.3em] font-bold transition-colors">
+            Forgot password?
+          </Link>
         </form>
 
         <div className="text-center">
