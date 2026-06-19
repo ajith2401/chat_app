@@ -16,10 +16,23 @@ export function ConnectPartner() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.get("/relationships/me")
-      .then((res) => setInviteCode(res.data?.inviteCode || null))
-      .catch(() => setInviteCode(null));
-  }, []);
+    let active = true;
+    const check = async () => {
+      try {
+        const { data } = await api.get("/relationships/me");
+        if (!active) return;
+        setInviteCode(data?.inviteCode || null);
+        // Partner joined → become active → enter the chat automatically.
+        if (data?.status === "active") {
+          await refreshUser();
+          window.location.reload();
+        }
+      } catch { /* ignore */ }
+    };
+    check();
+    const id = setInterval(check, 4000); // auto-advance when the partner joins
+    return () => { active = false; clearInterval(id); };
+  }, [refreshUser]);
 
   const copy = () => {
     if (!inviteCode) return;

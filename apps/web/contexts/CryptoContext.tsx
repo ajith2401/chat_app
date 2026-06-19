@@ -28,52 +28,42 @@ export const CryptoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [error, setError] = useState<string | null>(null);
   const isCreatorRef = useRef<boolean | null>(null);
 
-  const resolveIsCreator = useCallback(async (): Promise<boolean> => {
-    if (isCreatorRef.current !== null) return isCreatorRef.current;
-    try {
-      const { data } = await api.get("/relationships/me");
-      const creatorId = data?.user1Id?._id ?? data?.user1Id;
-      if (creatorId) {
-        // Only cache once we have a definitive answer from the server.
-        isCreatorRef.current = String(creatorId) === String(user?._id);
-        return isCreatorRef.current;
-      }
-    } catch {
-      /* fall through — don't cache failures so the poll can recover */
-    }
-    return false;
-  }, [user?._id]);
-
   const tryEnsure = useCallback(async () => {
-    if (!user?._id || !user.relationshipId) return;
-    const isCreator = await resolveIsCreator();
+    if (!user?._id || !user.relationshipId) { setStatus("ready"); return; }
+
+    // One fetch tells us status + who the creator is. /relationships/me is NOT
+    // guarded, so it works while pending too.
+    let rel: any = null;
+    try { rel = (await api.get("/relationships/me")).data; } catch { /* keep prior state */ return; }
+
+    const creatorId = rel?.user1Id?._id ?? rel?.user1Id;
+    if (creatorId) isCreatorRef.current = String(creatorId) === String(user._id);
+
+    // Pending = no partner yet. There's nothing to decrypt, and the key-share
+    // endpoints are (correctly) guarded to active relationships — so do NOT run
+    // any crypto here. The chat page shows the invite/connect screen instead.
+    if (rel?.status !== "active") { setStatus("ready"); return; }
+
     try {
-      const ok = await cc.ensureCK(user._id, isCreator);
+      const ok = await cc.ensureCK(user._id, isCreatorRef.current === true);
       if (ok) setStatus("ready");
       else setStatus(cc.isUnlocked() ? "waiting" : "locked");
     } catch {
       setStatus("locked");
     }
-  }, [user?._id, user?.relationshipId, resolveIsCreator]);
+  }, [user?._id, user?.relationshipId]);
 
   // Initial attempt: device fast-path needs no password.
   useEffect(() => {
-    if (!user?._id) {
-      setStatus("init");
-      return;
-    }
-    if (!user.relationshipId) {
-      // No relationship yet (onboarding). Nothing to decrypt.
-      setStatus("ready");
-      return;
-    }
+    if (!user?._id) { setStatus("init"); return; }
+    if (!user.relationshipId) { setStatus("ready"); return; } // onboarding — nothing to decrypt
     tryEnsure();
   }, [user?._id, user?.relationshipId, tryEnsure]);
 
   // Keep keys flowing without manual reloads:
-  //  - Bob ("waiting"): poll until the creator seals CK to him.
-  //  - Alice (creator, "ready"): re-distribute periodically so a partner/device
-  //    that joins after she opened the chat still receives the CK.
+  //  - joiner ("waiting"): poll until the creator seals CK to them.
+  //  - creator ("ready"): re-check so that when the partner joins (active) we
+  //    mint + distribute CK, and re-distribute to late devices.
   useEffect(() => {
     if (!user?.relationshipId) return;
     if (status !== "waiting" && !(status === "ready" && isCreatorRef.current)) return;

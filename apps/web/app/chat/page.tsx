@@ -61,10 +61,15 @@ export default function ChatPage() {
     } else if (user && !user.relationshipId) {
       router.push("/onboarding");
     } else if (user) {
-      fetchMessages();
       fetchRelationship(user._id);
     }
-  }, [user, authLoading, router, fetchMessages, fetchRelationship]);
+  }, [user, authLoading, router, fetchRelationship]);
+
+  // Only fetch history once the relationship is active — the /messages endpoint
+  // is guarded, so calling it while pending would 403.
+  useEffect(() => {
+    if (relationshipStatus === "active") fetchMessages();
+  }, [relationshipStatus, fetchMessages]);
 
   const isAtBottom = useCallback(() => {
     if (!scrollRef.current) return true;
