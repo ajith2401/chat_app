@@ -33,11 +33,15 @@ export const CryptoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     try {
       const { data } = await api.get("/relationships/me");
       const creatorId = data?.user1Id?._id ?? data?.user1Id;
-      isCreatorRef.current = String(creatorId) === String(user?._id);
+      if (creatorId) {
+        // Only cache once we have a definitive answer from the server.
+        isCreatorRef.current = String(creatorId) === String(user?._id);
+        return isCreatorRef.current;
+      }
     } catch {
-      isCreatorRef.current = false;
+      /* fall through — don't cache failures so the poll can recover */
     }
-    return isCreatorRef.current;
+    return false;
   }, [user?._id]);
 
   const tryEnsure = useCallback(async () => {

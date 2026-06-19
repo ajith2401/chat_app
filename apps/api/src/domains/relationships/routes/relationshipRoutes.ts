@@ -18,6 +18,8 @@ router.use(authMiddleware);
 router.post("/create", relationshipController.createRelationship);
 router.post("/join", joinLimiter, relationshipController.joinRelationship);
 router.post("/mood", relationshipGuard, relationshipController.updateMood);
-router.get("/me", relationshipGuard, relationshipController.getMyRelationship);
+// NOT guarded: a user must see their OWN relationship even while it's pending
+// (to show the invite code, and so the creator can mint the conversation key).
+router.get("/me", relationshipController.getMyRelationship);
 
 export default router;
