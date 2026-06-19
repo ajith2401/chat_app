@@ -61,13 +61,16 @@ export const CryptoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [user?._id, user?.relationshipId, tryEnsure]);
 
   // Keep keys flowing without manual reloads:
+  //  - "init": a /relationships/me failure (e.g. server briefly unreachable)
+  //    leaves us here; keep retrying so we recover automatically once it's back.
   //  - joiner ("waiting"): poll until the creator seals CK to them.
   //  - creator ("ready"): re-check so that when the partner joins (active) we
   //    mint + distribute CK, and re-distribute to late devices.
   useEffect(() => {
     if (!user?.relationshipId) return;
-    if (status !== "waiting" && !(status === "ready" && isCreatorRef.current)) return;
-    const everyMs = status === "waiting" ? 4000 : 9000;
+    const shouldPoll = status === "init" || status === "waiting" || (status === "ready" && isCreatorRef.current === true);
+    if (!shouldPoll) return;
+    const everyMs = status === "init" ? 3000 : status === "waiting" ? 4000 : 9000;
     const id = setInterval(() => { tryEnsure(); }, everyMs);
     return () => clearInterval(id);
   }, [status, user?.relationshipId, tryEnsure]);
