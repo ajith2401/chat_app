@@ -109,21 +109,48 @@ describe("keysService — identity + device lifecycle", () => {
 });
 
 describe("keysService — CK distribution + bundle authz", () => {
-  it("merges CK shares and returns the right share per device", async () => {
-    const rel = await Relationship.create({ user1Id: new mongoose.Types.ObjectId(), status: "active" });
-    await keysService.setCKShares(rel._id.toString(), [
-      { deviceId: "dev-1", sealedCK: { v: 1, ct: "x" } },
-      { deviceId: "dev-2", sealedCK: { v: 1, ct: "y" } },
+  it("merges CK shares for the caller's own devices and returns the right share", async () => {
+    const u1 = await User.create({ email: "m1@x.com", passwordHash: "h", name: "M1",
+      devices: [{ deviceId: "dev-1xxxxx", devicePub: "P1" }, { deviceId: "dev-2xxxxx", devicePub: "P2" }] });
+    const rel = await Relationship.create({ user1Id: u1._id, status: "active" });
+    await keysService.setCKShares(rel._id.toString(), u1._id.toString(), [
+      { deviceId: "dev-1xxxxx", sealedCK: { v: 1, ct: "x" } },
+      { deviceId: "dev-2xxxxx", sealedCK: { v: 1, ct: "y" } },
     ]);
-    // Re-seal dev-1 (merge, not duplicate) and add identity share.
-    await keysService.setCKShares(rel._id.toString(), [
-      { deviceId: "dev-1", sealedCK: { v: 1, ct: "x2" } },
+    await keysService.setCKShares(rel._id.toString(), u1._id.toString(), [
+      { deviceId: "dev-1xxxxx", sealedCK: { v: 1, ct: "x2" } },
     ]);
 
-    const share = await keysService.getCKShare(rel._id.toString(), "dev-1");
+    const share = await keysService.getCKShare(rel._id.toString(), "dev-1xxxxx");
     expect((share as any).ct).toBe("x2");
     const fresh = await Relationship.findById(rel._id).select("ckShares");
     expect(fresh?.ckShares).toHaveLength(2);
+  });
+
+  it("rejects shares for devices the caller doesn't own (key-poisoning defense)", async () => {
+    const creator = await User.create({ email: "cr@x.com", passwordHash: "h", name: "Cr",
+      devices: [{ deviceId: "creatordev1", devicePub: "CP" }] });
+    const joiner = await User.create({ email: "jo@x.com", passwordHash: "h", name: "Jo",
+      devices: [{ deviceId: "joinerdev1", devicePub: "JP" }] });
+    const rel = await Relationship.create({ user1Id: creator._id, user2Id: joiner._id, status: "active" });
+
+    // The joiner tries to overwrite the CREATOR's device share — must be rejected.
+    await expect(
+      keysService.setCKShares(rel._id.toString(), joiner._id.toString(), [
+        { deviceId: "creatordev1", sealedCK: { v: 1, ct: "POISON" } },
+      ])
+    ).rejects.toThrow();
+
+    // The joiner CAN set a share for their own device.
+    const ids = await keysService.setCKShares(rel._id.toString(), joiner._id.toString(), [
+      { deviceId: "joinerdev1", sealedCK: { v: 1, ct: "ok" } },
+    ]);
+    expect(ids).toContain("joinerdev1");
+    // The creator MAY distribute to the joiner's device.
+    const ids2 = await keysService.setCKShares(rel._id.toString(), creator._id.toString(), [
+      { deviceId: "joinerdev1", sealedCK: { v: 1, ct: "from-creator" } },
+    ]);
+    expect(ids2).toContain("joinerdev1");
   });
 
   it("key bundle returns the partner's public keys but never wrapped privs", async () => {
@@ -149,7 +176,7 @@ describe("keysService — CK distribution + bundle authz", () => {
     const rel = await Relationship.create({ user1Id: u1._id, user2Id: u2._id, status: "active" });
 
     const ck = genCK();
-    await keysService.setCKShares(rel._id.toString(), [
+    await keysService.setCKShares(rel._id.toString(), u1._id.toString(), [
       { deviceId: `identity:${u2._id.toString()}`, sealedCK: sealCK(u2id.pub, ck) as any },
     ]);
 

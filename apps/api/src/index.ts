@@ -71,6 +71,9 @@ app.use("/api/", apiLimiter);
 // session check fired on every page load), which the general limiter covers.
 app.use("/api/v1/auth/login", authLimiter);
 app.use("/api/v1/auth/signup", authLimiter);
+// Throttle email-triggering endpoints to prevent inbox-bombing a victim.
+app.use("/api/v1/auth/forgot-password", authLimiter);
+app.use("/api/v1/auth/resend-verification", authLimiter);
 
 // Routes
 app.use("/api/v1/auth", authRoutes);

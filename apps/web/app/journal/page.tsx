@@ -70,7 +70,8 @@ export default function JournalPage() {
             animate={{ opacity: 1, x: 0 }}
           >
             <h1 className="text-4xl font-serif text-white/90 tracking-tight">Our Journal</h1>
-            <p className="text-[10px] text-white/30 uppercase tracking-[0.3em] mt-3 font-bold italic">Shared memories, whispered thoughts</p>
+            <p className="text-[10px] text-white/45 uppercase tracking-[0.3em] mt-3 font-bold italic">Shared memories, whispered thoughts</p>
+            <p className="text-[10px] text-amber-300/50 mt-2 normal-case tracking-normal not-italic font-medium">Note: journal entries are stored on our server (not end-to-end encrypted like chat).</p>
           </motion.div>
           <motion.button 
             initial={{ opacity: 0, scale: 0.8 }}

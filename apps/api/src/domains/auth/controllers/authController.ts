@@ -18,8 +18,8 @@ const COOKIE_OPTIONS = {
   path: "/",
 };
 
-const setAuthCookie = (res: Response, userId: string) => {
-  const token = authService.signToken(userId);
+const setAuthCookie = (res: Response, userId: string, tokenVersion = 0) => {
+  const token = authService.signToken(userId, tokenVersion);
   res.cookie("auth_token", token, COOKIE_OPTIONS);
 };
 
@@ -27,7 +27,7 @@ export const signup = async (req: Request, res: Response) => {
   try {
     const input = signupSchema.parse(req.body);
     const { user, rawId, verifyToken } = await authService.signup(input);
-    setAuthCookie(res, rawId);
+    setAuthCookie(res, rawId, user.tokenVersion ?? 0);
     // Send verification email — non-blocking; signup succeeds even if email fails.
     sendVerificationEmail(user.email, verifyToken).catch((e) =>
       console.error("verification email failed:", e?.message)
@@ -85,7 +85,7 @@ export const login = async (req: Request, res: Response) => {
   try {
     const input = loginSchema.parse(req.body);
     const { user, rawId } = await authService.login(input);
-    setAuthCookie(res, rawId);
+    setAuthCookie(res, rawId, user.tokenVersion ?? 0);
     res.json({ user });
   } catch (err: any) {
     res.status(400).json({ message: err.message });

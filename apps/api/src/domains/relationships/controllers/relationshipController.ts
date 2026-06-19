@@ -1,6 +1,7 @@
 import { Response } from "express";
 import IORedis from "ioredis";
 import { AuthRequest } from "../../../middleware/authMiddleware";
+import { moodSchema } from "@couple-chat/validation";
 import * as relationshipService from "../services/relationshipService";
 
 const redis = new IORedis(process.env.REDIS_URL ?? "redis://localhost:6379", { maxRetriesPerRequest: null });
@@ -27,7 +28,7 @@ export const joinRelationship = async (req: AuthRequest, res: Response) => {
 
 export const updateMood = async (req: AuthRequest, res: Response) => {
   try {
-    const { mood } = req.body;
+    const { mood } = moodSchema.parse(req.body);
     await relationshipService.updateMood(req.user.relationshipId, mood);
     // Broadcast to all pods via Redis so both users' AmbientBackground updates
     redis.publish("mood-updates", JSON.stringify({

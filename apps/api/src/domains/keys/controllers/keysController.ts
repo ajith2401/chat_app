@@ -48,7 +48,11 @@ export const getBundle = async (req: AuthRequest, res: Response) => {
 export const setCKShares = async (req: AuthRequest, res: Response) => {
   try {
     const { shares } = ckSharesSchema.parse(req.body);
-    const deviceIds = await keysService.setCKShares(req.user.relationshipId.toString(), shares);
+    const deviceIds = await keysService.setCKShares(
+      req.user.relationshipId.toString(),
+      req.user._id.toString(),
+      shares
+    );
     res.status(201).json({ deviceIds });
   } catch (err: any) {
     res.status(400).json({ message: err.message });

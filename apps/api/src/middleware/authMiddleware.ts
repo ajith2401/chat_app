@@ -25,6 +25,11 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     const user = await User.findById(decoded.userId).select("-passwordHash -__v");
     if (!user) return res.status(401).json({ message: "User not found" });
 
+    // Reject tokens issued before a password reset (token-version mismatch).
+    if (typeof decoded.tv === "number" && decoded.tv !== ((user as any).tokenVersion ?? 0)) {
+      return res.status(401).json({ message: "Session expired" });
+    }
+
     req.user = user;
     next();
   } catch {

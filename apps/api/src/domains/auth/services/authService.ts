@@ -14,9 +14,9 @@ export const jwtSecret = () => {
   return secret;
 };
 
-export const signToken = (userId: string) => {
+export const signToken = (userId: string, tokenVersion = 0) => {
   const jti = require("crypto").randomUUID() as string;
-  return jwt.sign({ userId, jti }, jwtSecret(), { expiresIn: "7d" });
+  return jwt.sign({ userId, jti, tv: tokenVersion }, jwtSecret(), { expiresIn: "7d" });
 };
 
 const safeUser = (user: any) => {
@@ -82,6 +82,8 @@ export const resetPassword = async (token: string, newPassword: string) => {
   user.passwordHash = await bcrypt.hash(newPassword, 10);
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
+  // Invalidate every previously-issued JWT (stolen sessions die on reset).
+  user.tokenVersion = (user.tokenVersion ?? 0) + 1;
   await user.save();
   return true;
 };

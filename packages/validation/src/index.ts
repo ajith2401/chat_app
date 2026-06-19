@@ -77,6 +77,13 @@ export const moodSchema = z.object({
   mood: z.enum(["neutral", "romantic", "happy", "tense", "missing_you", "supportive", "playful"]),
 });
 
+export const journalCreateSchema = z.object({
+  title: z.string().min(1).max(200),
+  content: z.string().min(1).max(20000),
+  type: z.enum(["journal", "milestone"]).default("journal"),
+  moodTag: z.string().max(40).optional(),
+});
+
 export const batchSeenSchema = z.object({
   messageIds: z.array(z.string().min(1)).min(1).max(100),
 });

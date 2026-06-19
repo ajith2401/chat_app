@@ -1,4 +1,4 @@
-import { User, Relationship } from "@couple-chat/database";
+import { User, Relationship, MessageEmbedding } from "@couple-chat/database";
 import mongoose from "mongoose";
 
 // All values stored here are opaque to the server: public keys and ciphertext
@@ -86,13 +86,32 @@ export const getKeyBundle = async (relationshipId: string, userId: string) => {
 
 export const setCKShares = async (
   relationshipId: string,
+  callerId: string,
   shares: Array<{ deviceId: string; sealedCK: Record<string, unknown> }>
 ) => {
-  const rel = await Relationship.findById(relationshipId).select("ckShares");
+  const rel = await Relationship.findById(relationshipId).select("ckShares user1Id user2Id");
   if (!rel) throw new Error("Relationship not found");
+
+  const partnerId = partnerIdOf(rel, callerId);
+  const isCreator = rel.user1Id?.toString() === callerId;
+
+  // A user may only write shares for devices/identities they're allowed to:
+  //  - always: their own registered devices + their own identity marker
+  //  - the relationship creator may also distribute to the partner's devices/identity
+  const me = await User.findById(callerId).select("devices");
+  const allowed = new Set<string>([`identity:${callerId}`, ...(me?.devices ?? []).map((d) => d.deviceId)]);
+  if (isCreator && partnerId) {
+    const partner = await User.findById(partnerId).select("devices");
+    allowed.add(`identity:${partnerId.toString()}`);
+    (partner?.devices ?? []).forEach((d) => allowed.add(d.deviceId));
+  }
+
+  const accepted = shares.filter((s) => allowed.has(s.deviceId));
+  if (accepted.length === 0) throw new Error("No shares you're permitted to set");
+
   // Merge: replace existing share for a deviceId, append new ones.
   const byId = new Map(rel.ckShares.map((s) => [s.deviceId, s]));
-  for (const s of shares) byId.set(s.deviceId, { deviceId: s.deviceId, sealedCK: s.sealedCK });
+  for (const s of accepted) byId.set(s.deviceId, { deviceId: s.deviceId, sealedCK: s.sealedCK });
   rel.ckShares = Array.from(byId.values());
   await rel.save();
   return rel.ckShares.map((s) => s.deviceId);
@@ -123,7 +142,7 @@ export const enableAIGrant = async (
 };
 
 export const disableAIGrant = async (relationshipId: string) => {
-  return Relationship.findByIdAndUpdate(
+  const updated = await Relationship.findByIdAndUpdate(
     relationshipId,
     {
       aiRevokedAt: new Date(),
@@ -132,4 +151,8 @@ export const disableAIGrant = async (relationshipId: string) => {
     },
     { new: true }
   ).select("aiGrantVersion aiRevokedAt themePreferences");
+
+  // Purge the derived embeddings so revoking truly removes AI's access to history.
+  await MessageEmbedding.deleteMany({ relationshipId }).catch(() => {});
+  return updated;
 };
