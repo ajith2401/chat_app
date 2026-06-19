@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AmbientBackground } from "../../components/AmbientBackground";
 import { GlassContainer } from "../../components/GlassContainer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Plus, Sparkles, X, Save, Loader2 } from "lucide-react";
+import { Heart, Plus, Sparkles, X, Save, Loader2, Shield } from "lucide-react";
 import { BottomNav } from "../../components/BottomNav";
 import { useJournalStore } from "../../store/useJournalStore";
 import { usePresenceStore } from "../../store/usePresenceStore";
@@ -71,7 +71,10 @@ export default function JournalPage() {
           >
             <h1 className="text-4xl font-serif text-white/90 tracking-tight">Our Journal</h1>
             <p className="text-[10px] text-white/45 uppercase tracking-[0.3em] mt-3 font-bold italic">Shared memories, whispered thoughts</p>
-            <p className="text-[10px] text-amber-300/50 mt-2 normal-case tracking-normal not-italic font-medium">Note: journal entries are stored on our server (not end-to-end encrypted like chat).</p>
+            <p className="flex items-center gap-2 text-[11px] text-amber-300/80 mt-3 normal-case tracking-normal not-italic font-medium bg-amber-500/[0.07] border border-amber-400/15 rounded-lg px-3 py-2 max-w-md">
+              <Shield className="w-3.5 h-3.5 flex-shrink-0" />
+              Journal entries are stored on our server — not end-to-end encrypted like chat. Keep private conversations in Chat.
+            </p>
           </motion.div>
           <motion.button 
             initial={{ opacity: 0, scale: 0.8 }}
@@ -92,14 +95,17 @@ export default function JournalPage() {
             ))}
           </div>
         ) : entries.length === 0 ? (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-32 text-center opacity-30"
+            className="flex flex-col items-center justify-center py-32 text-center"
           >
-            <Sparkles className="w-16 h-16 mb-6 stroke-[1px]" />
-            <h3 className="font-serif text-2xl italic">The book is yet to be written.</h3>
-            <p className="text-xs uppercase tracking-[0.3em] mt-4 font-bold">Add your first shared memory</p>
+            <Sparkles className="w-16 h-16 mb-6 stroke-[1px] text-white/40" />
+            <h3 className="font-serif text-2xl italic text-white/75">The book is yet to be written.</h3>
+            <p className="text-xs uppercase tracking-[0.3em] mt-4 mb-6 font-bold text-white/45">Add your first shared memory</p>
+            <button onClick={() => setIsOpen(true)} className="px-6 py-3 rounded-xl bg-white/10 border border-white/15 text-white/80 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-white/15 transition-all">
+              Start your first memory →
+            </button>
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-2">
@@ -183,7 +189,7 @@ export default function JournalPage() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-[10px] uppercase tracking-widest text-white/30 ml-1 font-bold">Whisper your thoughts</label>
+                    <label className="text-[10px] uppercase tracking-widest text-white/55 ml-1 font-bold">Write your memory</label>
                     <textarea 
                       required
                       rows={4}

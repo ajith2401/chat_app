@@ -99,7 +99,7 @@ export default function SignupPage() {
           <button
             onClick={finishSignup}
             disabled={!acknowledged}
-            className="bg-white/10 enabled:hover:bg-white/20 border border-white/10 text-white rounded-xl py-4 text-xs tracking-[0.2em] uppercase transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="bg-rose-500/20 enabled:hover:bg-rose-500/30 border border-rose-400/30 text-white rounded-xl py-4 text-xs tracking-[0.2em] uppercase transition-all shadow-[0_0_20px_rgba(251,113,133,0.15)] disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Continue
           </button>
@@ -125,11 +125,12 @@ export default function SignupPage() {
             <label htmlFor="signup-name" className="text-[10px] uppercase tracking-widest text-white/70 ml-1 font-bold">Your Name</label>
             <input
               id="signup-name"
+              autoComplete="name"
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white placeholder:text-white/45 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
               placeholder="Full Name"
             />
           </div>
@@ -138,11 +139,12 @@ export default function SignupPage() {
             <label htmlFor="signup-email" className="text-[10px] uppercase tracking-widest text-white/70 ml-1 font-bold">Email Address</label>
             <input
               id="signup-email"
+              autoComplete="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white placeholder:text-white/45 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
               placeholder="you@example.com"
             />
           </div>
@@ -151,11 +153,12 @@ export default function SignupPage() {
             <label htmlFor="signup-password" className="text-[10px] uppercase tracking-widest text-white/70 ml-1 font-bold">Password</label>
             <input
               id="signup-password"
+              autoComplete="new-password"
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white placeholder:text-white/45 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
               placeholder="••••••••"
             />
           </div>
@@ -163,7 +166,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={loading}
-            className="mt-4 bg-white/10 hover:bg-white/20 border border-white/10 text-white rounded-xl py-4 text-xs tracking-[0.2em] uppercase transition-all disabled:opacity-50"
+            className="mt-4 bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-white rounded-xl py-4 text-xs tracking-[0.2em] uppercase transition-all shadow-[0_0_20px_rgba(251,113,133,0.15)] disabled:opacity-50"
           >
             {loading ? "Creating..." : "Start Together"}
           </button>

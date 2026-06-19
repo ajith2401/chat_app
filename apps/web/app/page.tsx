@@ -27,7 +27,7 @@ const FAQS = [
   { q: "What is the recovery code?", a: "At signup you get a one-time recovery code. Because your password unlocks your encryption keys, the recovery code is the only way to restore your message history on a new device or if you forget your password. Store it somewhere safe — we can never recover it for you." },
   { q: "How do we connect as a couple?", a: "One of you creates a space and gets an invite code. The other signs up and enters that code. Once joined, your secure channel forms automatically and you can chat." },
   { q: "Can I use it on my phone?", a: "Yes — it works in any modern mobile browser. For notifications on iPhone, add the site to your Home Screen first (iOS requirement). On Android and desktop, just enable notifications in Settings." },
-  { q: "Does the AI read our messages?", a: "Only if you both explicitly opt in from Settings. It's off by default. When on, you're knowingly sharing your conversation key with the AI so it can sense mood — and you can revoke it anytime." },
+  { q: "Does the AI read our messages?", a: "Only if a partner explicitly opts in from Settings — it's off by default. Either of you can enable it for the relationship (it doesn't require both), and either of you can revoke it anytime, which immediately removes the key and deletes the AI's memory." },
   { q: "What if I forget my password?", a: "Use 'Forgot password' to reset it by email. Note: because your password protects your encryption keys, after a reset you'll need your recovery code to unlock your old messages on a device." },
 ];
 
@@ -40,7 +40,7 @@ function Faq({ q, a }: { q: string; a: string }) {
       className="w-full text-left p-5 sm:p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/10 transition-all"
     >
       <div className="flex items-center justify-between gap-4">
-        <span role="heading" aria-level={3} className="text-sm sm:text-base text-white/85 font-medium">{q}</span>
+        <span className="text-sm sm:text-base text-white/85 font-medium">{q}</span>
         <ChevronDown className={`w-4 h-4 text-white/50 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </div>
       {open && <p className="mt-3 text-xs sm:text-sm text-white/60 leading-relaxed font-light">{a}</p>}
@@ -78,7 +78,7 @@ export default function Home() {
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/65 font-bold mt-4">
           <Shield className="w-3.5 h-3.5 text-emerald-400/70" /> Zero-knowledge E2EE · Your words, only yours
         </div>
-        <Link href="#guide" className="absolute bottom-8 text-white/20 hover:text-white/50 transition-colors animate-bounce">
+        <Link href="#guide" className="absolute bottom-8 text-white/40 hover:text-white/70 transition-colors animate-bounce">
           <ChevronDown className="w-6 h-6" />
         </Link>
       </section>

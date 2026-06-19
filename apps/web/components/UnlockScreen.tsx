@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { AmbientBackground } from "./AmbientBackground";
 import { GlassContainer } from "./GlassContainer";
-import { Lock, Loader2 } from "lucide-react";
+import { BottomNav } from "./BottomNav";
+import { Lock, Loader2, Share2 } from "lucide-react";
 
 interface UnlockScreenProps {
   mode: "locked" | "waiting";
@@ -19,17 +20,31 @@ export function UnlockScreen({ mode, error, onUnlock, onRestore }: UnlockScreenP
   const [busy, setBusy] = useState(false);
 
   if (mode === "waiting") {
+    const nudge = async () => {
+      const text = `Open A Space for Us 💜 so our private chat can connect — ${typeof window !== "undefined" ? window.location.origin : ""}`;
+      if (typeof navigator !== "undefined" && navigator.share) {
+        try { await navigator.share({ title: "A Space for Us", text }); } catch { /* cancelled */ }
+      } else if (typeof navigator !== "undefined") {
+        navigator.clipboard?.writeText(text);
+      }
+    };
     return (
       <div className="flex h-[100dvh] w-full flex-col items-center justify-center p-6 bg-[#050505]">
         <AmbientBackground />
         <GlassContainer className="w-full max-w-md p-10 text-center flex flex-col items-center gap-6" intensity="high">
           <Loader2 className="w-8 h-8 text-rose-400/50 animate-spin" />
-          <h1 className="text-2xl font-serif text-white/90">Securing your channel…</h1>
-          <p className="text-xs text-white/40 leading-relaxed">
-            Your partner set up the private space. As soon as they next open the chat, your
-            encrypted history unlocks here automatically.
+          <h1 className="text-2xl font-serif text-white/90">Almost connected…</h1>
+          <p className="text-sm text-white/55 leading-relaxed">
+            Waiting for your partner to open the app — the secure channel connects automatically
+            the moment they do. Give them a nudge:
           </p>
+          <button onClick={nudge}
+            className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/10 border border-white/15 text-white/80 text-[11px] uppercase tracking-[0.2em] font-bold hover:bg-white/15 transition-all">
+            <Share2 className="w-4 h-4" /> Nudge them to open the app
+          </button>
+          <p className="text-[11px] text-white/40">You can keep using your Journal and Settings while you wait.</p>
         </GlassContainer>
+        <BottomNav />
       </div>
     );
   }
@@ -56,7 +71,7 @@ export function UnlockScreen({ mode, error, onUnlock, onRestore }: UnlockScreenP
             <Lock className="w-6 h-6 text-rose-400/60" />
           </div>
           <h1 className="text-2xl font-serif text-white/90">Unlock your messages</h1>
-          <p className="text-xs text-white/40 leading-relaxed">
+          <p className="text-sm text-white/55 leading-relaxed">
             Your conversations are end-to-end encrypted. Enter your{" "}
             {useRecovery ? "recovery code" : "password"} to decrypt them on this device.
           </p>
@@ -72,7 +87,7 @@ export function UnlockScreen({ mode, error, onUnlock, onRestore }: UnlockScreenP
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="ABCD-EFGH-IJKL-…"
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono tracking-widest placeholder:text-white/30 focus:outline-none focus:border-white/40 transition-all"
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white font-mono tracking-widest placeholder:text-white/45 focus:outline-none focus:border-white/40 transition-all"
             />
           ) : (
             <input
@@ -81,14 +96,14 @@ export function UnlockScreen({ mode, error, onUnlock, onRestore }: UnlockScreenP
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/40 transition-all"
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/45 focus:outline-none focus:border-white/40 transition-all"
             />
           )}
 
           <button
             type="submit"
             disabled={busy}
-            className="bg-white/10 hover:bg-white/20 border border-white/10 text-white rounded-xl py-4 text-xs tracking-[0.2em] uppercase transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/30 text-white rounded-xl py-4 text-xs tracking-[0.2em] uppercase transition-all shadow-[0_0_20px_rgba(251,113,133,0.15)] disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {busy && <Loader2 className="w-4 h-4 animate-spin" />}
             {busy ? "Unlocking…" : "Unlock"}
@@ -97,7 +112,7 @@ export function UnlockScreen({ mode, error, onUnlock, onRestore }: UnlockScreenP
 
         <button
           onClick={() => setUseRecovery((v) => !v)}
-          className="text-[10px] uppercase tracking-[0.3em] text-white/30 hover:text-white/70 transition-all font-bold"
+          className="text-[10px] uppercase tracking-[0.3em] text-white/55 hover:text-white/85 transition-all font-bold"
         >
           {useRecovery ? "Use password instead" : "Forgot password? Use recovery code"}
         </button>

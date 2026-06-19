@@ -175,14 +175,19 @@ export default function SettingsPage() {
                   </motion.div>
                 ) : (
                   <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-start justify-between group">
-                    <div className="min-w-0">
-                      <h2 className="text-2xl sm:text-3xl font-serif text-white/90 tracking-tight truncate">{user?.name}</h2>
-                      <p className="text-xs text-white/30 mt-1.5 font-mono tracking-wider truncate">{user?.email}</p>
-                    </div>
-                    <button onClick={() => setIsEditing(true)} aria-label="Edit display name"
-                      className="ml-4 p-2.5 rounded-full hover:bg-white/5 text-white/20 hover:text-white/60 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0">
-                      <Edit2 className="w-4 h-4" />
+                    {/* Whole name area is tappable to edit (not just the icon). */}
+                    <button onClick={() => setIsEditing(true)} className="min-w-0 text-left flex items-center gap-2" aria-label="Edit display name">
+                      <div className="min-w-0">
+                        <h2 className="text-2xl sm:text-3xl font-serif text-white/90 tracking-tight truncate flex items-center gap-2">
+                          {user?.name}
+                          <Edit2 className="w-3.5 h-3.5 text-white/35 flex-shrink-0" />
+                        </h2>
+                        <p className="text-xs text-white/45 mt-1.5 font-mono tracking-wider truncate">{user?.email}</p>
+                      </div>
                     </button>
+                    <span className="ml-4 p-2.5 rounded-full text-white/40 flex-shrink-0 opacity-0 sm:opacity-100" aria-hidden="true">
+                      <Edit2 className="w-4 h-4" />
+                    </span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -308,7 +313,7 @@ export default function SettingsPage() {
               <p className="text-[9px] text-white/15 italic text-center">Waiting for partner to join…</p>
             </div>
           ) : (
-            <p className="text-sm text-white/30 italic text-center py-4">No relationship found.</p>
+            <p className="text-sm text-white/50 italic text-center py-4">We couldn&apos;t load your space info — try refreshing.</p>
           )}
         </GlassContainer>
 

@@ -86,15 +86,15 @@ export default function OnboardingPage() {
               exit={{ opacity: 0, scale: 1.05 }}
               transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             >
-              <GlassContainer className="p-12 flex flex-col gap-10" intensity="high">
+              <GlassContainer className="p-8 sm:p-12 flex flex-col gap-10" intensity="high">
                 <div className="text-center">
                   <div className="w-16 h-16 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto mb-6 border border-rose-500/20">
                     <Heart className="w-8 h-8 text-rose-400/60" />
                   </div>
                   <h1 className="text-4xl font-serif text-white/90 mb-3 tracking-tight">Your Private Space</h1>
-                  <p className="text-sm text-white/40 leading-relaxed font-light">
-                    Every beautiful journey begins with a single step. <br />
-                    Start your shared story today.
+                  <p className="text-sm text-white/55 leading-relaxed font-light">
+                    Setting up together? <span className="text-white/80">One of you creates</span> the space —
+                    the other <span className="text-white/80">joins with the code</span>.
                   </p>
                 </div>
 
@@ -111,7 +111,7 @@ export default function OnboardingPage() {
 
                   <div className="relative flex items-center gap-6">
                     <div className="h-px bg-white/5 flex-1" />
-                    <span className="text-[10px] text-white/20 uppercase tracking-[0.4em] font-black">or</span>
+                    <span className="text-[10px] text-white/45 uppercase tracking-[0.4em] font-black">or</span>
                     <div className="h-px bg-white/5 flex-1" />
                   </div>
 
@@ -122,7 +122,7 @@ export default function OnboardingPage() {
                         placeholder="PASTE PARTNER'S CODE"
                         value={inviteCode}
                         onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-5 px-6 text-sm text-white focus:outline-none focus:border-white/20 transition-all text-center tracking-[0.2em] placeholder:text-white/10 font-medium uppercase"
+                        className="w-full bg-white/[0.03] border border-white/10 rounded-2xl py-5 px-6 text-sm text-white focus:outline-none focus:border-white/20 transition-all text-center tracking-[0.2em] placeholder:text-white/45 font-medium uppercase"
                       />
                     </div>
                     <button 
@@ -139,7 +139,7 @@ export default function OnboardingPage() {
                   <motion.p 
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-rose-400 text-[10px] text-center uppercase tracking-widest font-bold"
+                    className="text-rose-400 text-xs text-center"
                   >
                     {error}
                   </motion.p>
@@ -170,7 +170,7 @@ export default function OnboardingPage() {
                   onClick={copyToClipboard}
                   className="group relative cursor-pointer py-8 px-4 rounded-3xl bg-white/[0.02] border border-dashed border-white/10 hover:border-white/20 transition-all"
                 >
-                  <span className="text-5xl font-serif tracking-[0.2em] text-white/90 pl-4">{generatedCode}</span>
+                  <span className="text-3xl sm:text-5xl font-serif tracking-[0.15em] sm:tracking-[0.2em] text-white/90 break-all">{generatedCode}</span>
                   <div className="absolute top-3 right-3 p-2 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
                     {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/40" />}
                   </div>

@@ -292,7 +292,7 @@ export default function ChatPage() {
             <div className="flex items-center gap-2 sm:gap-4">
               <MoodSelector />
               <div className="h-8 w-px bg-white/5 mx-1" />
-              <button onClick={() => handleSend("❤️")} aria-label="Send a heart" title="Send a heart" className="p-2 sm:p-2.5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><Heart className="w-4 sm:w-5 h-4 sm:h-5 text-white/40 group-hover:text-rose-400/70 transition-colors" /></button>
+              <button onClick={() => handleSend("❤️")} aria-label="Send a heart" title="Send a heart" className="p-2.5 sm:p-3 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><Heart className="w-4 sm:w-5 h-4 sm:h-5 text-white/40 group-hover:text-rose-400/70 transition-colors" /></button>
             </div>
           </header>
 
@@ -416,7 +416,7 @@ export default function ChatPage() {
                   onKeyDown={(e) => e.key === "Enter" && handleSend(inputValue)}
                   aria-label="Message"
                   placeholder="Whisper something..."
-                  className="w-full bg-white/[0.06] border border-white/[0.14] rounded-[1.5rem] py-4 sm:py-5 pl-6 sm:pl-7 pr-14 sm:pr-16 text-[14px] sm:text-[15px] text-white/90 focus:outline-none focus:border-white/30 focus:bg-white/[0.08] transition-all placeholder:text-white/35 font-light"
+                  className="w-full bg-white/[0.06] border border-white/[0.14] rounded-[1.5rem] py-4 sm:py-5 pl-6 sm:pl-7 pr-14 sm:pr-16 text-[14px] sm:text-[15px] text-white/90 focus:outline-none focus:border-white/30 focus:bg-white/[0.08] transition-all placeholder:text-white/45 font-light"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   <motion.button onClick={() => handleSend(inputValue)} disabled={!inputValue.trim()} aria-label="Send message" animate={{ scale: inputValue.trim() ? 1 : 0.8, opacity: inputValue.trim() ? 1 : 0 }} className="p-2.5 sm:p-3.5 rounded-2xl bg-white/10 text-white shadow-xl hover:bg-white/20 active:scale-90 transition-all"><Send className="w-4 sm:w-5 h-4 sm:h-5" /></motion.button>

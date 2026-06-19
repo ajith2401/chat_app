@@ -52,9 +52,9 @@ function ResetForm() {
     <form onSubmit={submit} className="flex flex-col gap-5">
       {error && <p className="text-rose-400 text-xs text-center">{error}</p>}
       <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-        placeholder="New password" className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/40 transition-all" />
+        placeholder="New password" className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/45 focus:outline-none focus:border-white/40 transition-all" />
       <input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)}
-        placeholder="Confirm new password" className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/40 transition-all" />
+        placeholder="Confirm new password" className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/45 focus:outline-none focus:border-white/40 transition-all" />
       <button type="submit" disabled={loading}
         className="bg-white/10 hover:bg-white/20 border border-white/10 text-white rounded-xl py-4 text-xs tracking-[0.2em] uppercase transition-all disabled:opacity-50">
         {loading ? "Updating…" : "Set new password"}

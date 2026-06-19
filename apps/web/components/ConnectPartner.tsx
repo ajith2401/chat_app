@@ -118,7 +118,7 @@ export function ConnectPartner() {
             value={partnerCode}
             onChange={(e) => setPartnerCode(e.target.value.toUpperCase())}
             placeholder="LOVE-XXXXXX"
-            className="bg-white/[0.03] border border-white/10 rounded-xl py-4 px-5 text-center text-sm text-white tracking-[0.2em] font-medium placeholder:text-white/15 focus:outline-none focus:border-white/25 transition-all uppercase"
+            className="bg-white/[0.03] border border-white/10 rounded-xl py-4 px-5 text-center text-sm text-white tracking-[0.2em] font-medium placeholder:text-white/45 focus:outline-none focus:border-white/25 transition-all uppercase"
           />
           <button type="submit" disabled={joining || !partnerCode.trim()}
             className="flex items-center justify-center gap-2 py-4 rounded-xl bg-indigo-500/15 border border-indigo-400/25 text-indigo-100 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-indigo-500/25 transition-all disabled:opacity-40">

@@ -49,8 +49,8 @@ export const BottomNav = () => {
               )}
               <item.icon className={cn("w-[18px] h-[18px] relative z-10 transition-transform duration-200", isActive ? "scale-110" : "group-hover:scale-105")} />
               <span className={cn(
-                "text-[8px] uppercase tracking-[0.18em] font-black relative z-10",
-                isActive ? "text-white" : "text-white/40 group-hover:text-white/60"
+                "text-[10px] uppercase tracking-[0.12em] font-black relative z-10",
+                isActive ? "text-white" : "text-white/55 group-hover:text-white/75"
               )}>
                 {item.label}
               </span>

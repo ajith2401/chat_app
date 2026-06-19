@@ -94,8 +94,8 @@ export function AIConsentCard() {
           <ul className="text-[11px] text-white/55 leading-relaxed flex flex-col gap-1.5 pl-1">
             <li>· Used only to sense mood &amp; surface memories — not for training.</li>
             <li>· Existing messages stay private unless re-processed.</li>
-            <li>· Both partners can opt in; either can revoke anytime.</li>
-            <li>· Turning it off immediately removes the shared key for future messages.</li>
+            <li>· Either of you can turn this on for the relationship — it doesn&apos;t need both.</li>
+            <li>· Either of you can revoke anytime; that immediately removes the key and deletes AI memory.</li>
           </ul>
           <div className="flex gap-3">
             <button

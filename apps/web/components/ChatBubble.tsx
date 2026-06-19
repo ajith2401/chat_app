@@ -164,9 +164,9 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
                 <button
                   type="button"
                   onClick={imgFailed ? () => { setImgFailed(false); setImgSrc(null); setImgRetry((n) => n + 1); } : undefined}
-                  className="rounded-xl h-40 w-56 bg-white/5 flex flex-col items-center justify-center gap-1 text-[10px] uppercase tracking-widest text-white/45"
+                  className={cn("rounded-xl h-40 w-56 bg-white/5 flex flex-col items-center justify-center gap-1 text-[10px] uppercase tracking-widest text-white/45", !imgFailed && "animate-pulse")}
                 >
-                  {imgFailed ? <><span>Couldn&apos;t load</span><span className="text-white/60 normal-case tracking-normal">Tap to retry</span></> : "Decrypting…"}
+                  {imgFailed ? <><span>Couldn&apos;t load</span><span className="text-white/60 normal-case tracking-normal">Tap to retry</span></> : "🔒 Decrypting…"}
                 </button>
               )}
             </div>
@@ -189,7 +189,7 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
             onClick={() => onReply?.(message)}
             aria-label="Reply"
             title="Reply"
-            className="p-2 rounded-full hover:bg-white/5 text-white/35 hover:text-white/70"
+            className="p-2.5 rounded-full hover:bg-white/5 text-white/35 hover:text-white/70"
           >
             <ReplyIcon className="w-4 h-4" />
           </button>
@@ -198,7 +198,7 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
               onClick={() => setShowPicker((v) => !v)}
               aria-label="React"
               title="React"
-              className="p-2 rounded-full hover:bg-white/5 text-white/35 hover:text-white/70"
+              className="p-2.5 rounded-full hover:bg-white/5 text-white/35 hover:text-white/70"
             >
               <SmilePlus className="w-4 h-4" />
             </button>
@@ -232,7 +232,7 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
               key={emoji}
               onClick={() => react(emoji)}
               className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border transition-all",
+                "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs border transition-all",
                 myEmoji === emoji ? "bg-rose-500/20 border-rose-400/30" : "bg-white/5 border-white/10 hover:bg-white/10"
               )}
             >
