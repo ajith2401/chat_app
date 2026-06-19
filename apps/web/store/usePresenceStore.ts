@@ -26,6 +26,7 @@ export const usePresenceStore = create<PresenceState>((set) => ({
     try {
       const res = await api.get("/relationships/me");
       const rel = res.data;
+      if (!rel) { set({ relationshipStatus: "pending" }); return; }
       const partner = rel.user1Id?._id === currentUserId ? rel.user2Id : rel.user1Id;
       set({
         relationshipStatus: rel.status,
@@ -35,8 +36,11 @@ export const usePresenceStore = create<PresenceState>((set) => ({
         currentVibe: rel.currentMood || "neutral",
         currentIntensity: rel.lastEmotionIntensity ?? 0.5,
       });
-    } catch {
-      // ignore
+    } catch (err: any) {
+      // A 403 from the (guarded) endpoint means the relationship exists but isn't
+      // active yet = pending. Treat it as pending so the UI shows the connect
+      // screen instead of hanging — works even if the backend isn't updated.
+      if (err?.response?.status === 403) set({ relationshipStatus: "pending" });
     }
   },
 }));

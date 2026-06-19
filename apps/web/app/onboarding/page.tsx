@@ -16,7 +16,7 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const router = useRouter();
 
   // Listen for partner joining — auto-redirect when relationship activates
@@ -38,6 +38,8 @@ export default function OnboardingPage() {
     try {
       const res = await api.post("/relationships/create");
       setGeneratedCode(res.data.inviteCode);
+      // Stash so the connect screen can show it later even if /me is unavailable.
+      if (user?._id && res.data.inviteCode) localStorage.setItem(`cc_invite_${user._id}`, res.data.inviteCode);
     } catch (err) {
       setError("Failed to create space. Please try again.");
     } finally {

@@ -31,10 +31,17 @@ export const CryptoProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const tryEnsure = useCallback(async () => {
     if (!user?._id || !user.relationshipId) { setStatus("ready"); return; }
 
-    // One fetch tells us status + who the creator is. /relationships/me is NOT
-    // guarded, so it works while pending too.
+    // One fetch tells us status + who the creator is.
     let rel: any = null;
-    try { rel = (await api.get("/relationships/me")).data; } catch { /* keep prior state */ return; }
+    try {
+      rel = (await api.get("/relationships/me")).data;
+    } catch (e: any) {
+      // 403 = relationship exists but is pending (guarded endpoint on older
+      // backends). Don't hang on "init" — go "ready" so the chat page shows the
+      // connect/invite screen instead of an endless spinner.
+      if (e?.response?.status === 403) { setStatus("ready"); return; }
+      return; // transient/network — the poll will retry
+    }
 
     const creatorId = rel?.user1Id?._id ?? rel?.user1Id;
     if (creatorId) isCreatorRef.current = String(creatorId) === String(user._id);

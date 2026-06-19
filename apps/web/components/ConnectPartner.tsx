@@ -8,12 +8,20 @@ import api from "../lib/api";
 import { useAuth } from "../contexts/AuthContext";
 
 export function ConnectPartner() {
-  const { refreshUser } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [partnerCode, setPartnerCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Seed from the locally-stashed code (saved at creation) so the creator can
+  // still see + share their code even if the server can't return it yet.
+  useEffect(() => {
+    if (!user?._id) return;
+    const cached = localStorage.getItem(`cc_invite_${user._id}`);
+    if (cached) setInviteCode(cached);
+  }, [user?._id]);
 
   useEffect(() => {
     let active = true;
@@ -21,18 +29,25 @@ export function ConnectPartner() {
       try {
         const { data } = await api.get("/relationships/me");
         if (!active) return;
-        setInviteCode(data?.inviteCode || null);
+        if (data?.inviteCode) {
+          setInviteCode(data.inviteCode);
+          if (user?._id) localStorage.setItem(`cc_invite_${user._id}`, data.inviteCode);
+        }
         // Partner joined → become active → enter the chat automatically.
         if (data?.status === "active") {
+          if (user?._id) localStorage.removeItem(`cc_invite_${user._id}`);
           await refreshUser();
           window.location.reload();
         }
-      } catch { /* ignore */ }
+      } catch {
+        // 403 (pending on an older backend) — keep the stashed code; the join
+        // action still works, and once the partner joins this turns active.
+      }
     };
     check();
     const id = setInterval(check, 4000); // auto-advance when the partner joins
     return () => { active = false; clearInterval(id); };
-  }, [refreshUser]);
+  }, [refreshUser, user?._id]);
 
   const copy = () => {
     if (!inviteCode) return;
@@ -80,15 +95,19 @@ export function ConnectPartner() {
 
         {/* Your code */}
         <div className="flex flex-col gap-3">
-          <span className="text-[9px] uppercase tracking-[0.3em] text-white/30 font-black text-center">Your code</span>
-          <button onClick={copy}
+          <span className="text-[9px] uppercase tracking-[0.3em] text-white/45 font-black text-center">Your code</span>
+          <button onClick={copy} disabled={!inviteCode}
             className="group relative py-6 px-4 rounded-2xl bg-white/[0.03] border border-dashed border-white/15 hover:border-white/30 transition-all">
-            <span className="text-2xl sm:text-3xl font-serif tracking-[0.25em] text-white/90">
-              {inviteCode || <Loader2 className="w-6 h-6 animate-spin inline text-white/30" />}
-            </span>
-            <span className="absolute top-3 right-3 p-2 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/40" />}
-            </span>
+            {inviteCode ? (
+              <span className="text-2xl sm:text-3xl font-serif tracking-[0.25em] text-white/90 break-all">{inviteCode}</span>
+            ) : (
+              <span className="text-xs text-white/45">Your code will appear here — pull to refresh if it doesn&apos;t.</span>
+            )}
+            {inviteCode && (
+              <span className="absolute top-3 right-3 p-2 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white/40" />}
+              </span>
+            )}
           </button>
           <div className="flex gap-2">
             <button onClick={copy} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-all">
