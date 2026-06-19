@@ -104,20 +104,19 @@ export default function JournalPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-2">
             <AnimatePresence>
               {entries.map((entry) => (
-                <GlassContainer 
-                  key={entry._id} 
-                  className="p-8 flex flex-col gap-5 group cursor-pointer border-white/5 hover:border-white/20 transition-all duration-500"
+                <GlassContainer
+                  key={entry._id}
+                  className="p-8 flex flex-col gap-5 group border-white/5 transition-all duration-500"
                   intensity="medium"
-                  interactive
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-white/20 uppercase tracking-[0.2em] font-black">
+                    <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] font-black">
                       {new Date(entry.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
-                    <span className="text-[9px] px-3 py-1 rounded-full bg-rose-500/10 text-rose-300/60 border border-rose-500/10 font-bold uppercase tracking-wider">{entry.type === "milestone" ? "Milestone" : (entry.moodTag || 'Shared')}</span>
+                    <span className="text-[9px] px-3 py-1 rounded-full bg-rose-500/10 text-rose-300/70 border border-rose-500/10 font-bold uppercase tracking-wider">{entry.type === "milestone" ? "Milestone" : (entry.moodTag || 'Shared')}</span>
                   </div>
-                  <h3 className="text-2xl font-serif text-white/90 group-hover:text-white transition-colors leading-tight font-medium">{entry.title}</h3>
-                  <p className="text-[13px] text-white/40 leading-relaxed font-sans font-light line-clamp-3 italic group-hover:text-white/50 transition-colors">"{entry.content}"</p>
+                  <h3 className="text-2xl font-serif text-white/90 leading-tight font-medium">{entry.title}</h3>
+                  <p className="text-[13px] text-white/60 leading-relaxed font-sans font-light italic whitespace-pre-wrap">{entry.content}</p>
                 </GlassContainer>
               ))}
             </AnimatePresence>

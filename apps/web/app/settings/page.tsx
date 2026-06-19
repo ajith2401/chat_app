@@ -3,7 +3,7 @@
 import { AmbientBackground } from "../../components/AmbientBackground";
 import { GlassContainer } from "../../components/GlassContainer";
 import { useAuth } from "../../contexts/AuthContext";
-import { LogOut, User, Shield, Bell, Heart, Copy, Check, Edit2, Save, X, Wifi, WifiOff, Camera, Loader2 } from "lucide-react";
+import { LogOut, Shield, Heart, Copy, Check, Edit2, Save, X, Camera, Loader2, Wifi, WifiOff } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { BottomNav } from "../../components/BottomNav";
 import { motion, AnimatePresence } from "framer-motion";
@@ -132,6 +132,7 @@ export default function SettingsPage() {
               <button
                 onClick={() => avatarInputRef.current?.click()}
                 disabled={uploadingAvatar}
+                aria-label="Change profile photo"
                 className="group relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border border-white/10 shadow-xl flex items-center justify-center bg-gradient-to-br from-rose-500/20 to-indigo-500/20 text-white/50 font-serif text-3xl"
                 title="Change profile photo"
               >
@@ -178,7 +179,7 @@ export default function SettingsPage() {
                       <h2 className="text-2xl sm:text-3xl font-serif text-white/90 tracking-tight truncate">{user?.name}</h2>
                       <p className="text-xs text-white/30 mt-1.5 font-mono tracking-wider truncate">{user?.email}</p>
                     </div>
-                    <button onClick={() => setIsEditing(true)}
+                    <button onClick={() => setIsEditing(true)} aria-label="Edit display name"
                       className="ml-4 p-2.5 rounded-full hover:bg-white/5 text-white/20 hover:text-white/60 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0">
                       <Edit2 className="w-4 h-4" />
                     </button>
@@ -317,28 +318,13 @@ export default function SettingsPage() {
         {/* ── AI consent (E2EE opt-in) ── */}
         {user?.relationshipId && <AIConsentCard />}
 
-        {/* ── System settings ── */}
-        <GlassContainer className="p-6 sm:p-8 flex flex-col gap-3" intensity="low">
-          <span className="text-[9px] uppercase tracking-[0.3em] text-white/20 font-black mb-1">Preferences</span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button className="flex items-center gap-4 px-6 py-4 rounded-[1.1rem] bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] transition-all text-white/40 hover:text-white/80 group">
-              <Bell className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" />
-              <span className="text-xs font-bold uppercase tracking-widest">Notifications</span>
-            </button>
-            <button className="flex items-center gap-4 px-6 py-4 rounded-[1.1rem] bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.05] transition-all text-white/40 hover:text-white/80 group">
-              <Shield className="w-4 h-4 opacity-40 group-hover:opacity-100 transition-opacity" />
-              <span className="text-xs font-bold uppercase tracking-widest">Security</span>
-            </button>
-          </div>
-        </GlassContainer>
-
-        {/* ── Logout ── */}
+        {/* ── Sign out ── */}
         <button
           onClick={logout}
-          className="flex items-center justify-center gap-3 w-full py-5 rounded-[1.25rem] bg-rose-500/5 border border-rose-500/10 text-rose-300/50 hover:bg-rose-500/10 hover:text-rose-300/80 transition-all text-[10px] tracking-[0.3em] uppercase font-black"
+          className="flex items-center justify-center gap-3 w-full py-5 rounded-[1.25rem] bg-rose-500/5 border border-rose-500/10 text-rose-300/60 hover:bg-rose-500/10 hover:text-rose-300/90 transition-all text-[10px] tracking-[0.3em] uppercase font-black"
         >
           <LogOut className="w-4 h-4" />
-          Terminate Session
+          Sign Out
         </button>
       </div>
 

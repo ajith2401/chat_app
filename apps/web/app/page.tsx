@@ -36,13 +36,14 @@ function Faq({ q, a }: { q: string; a: string }) {
   return (
     <button
       onClick={() => setOpen((v) => !v)}
+      aria-expanded={open}
       className="w-full text-left p-5 sm:p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06] hover:border-white/10 transition-all"
     >
       <div className="flex items-center justify-between gap-4">
-        <h3 className="text-sm sm:text-base text-white/80 font-medium">{q}</h3>
-        <ChevronDown className={`w-4 h-4 text-white/40 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+        <span role="heading" aria-level={3} className="text-sm sm:text-base text-white/85 font-medium">{q}</span>
+        <ChevronDown className={`w-4 h-4 text-white/50 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
       </div>
-      {open && <p className="mt-3 text-xs sm:text-sm text-white/45 leading-relaxed font-light">{a}</p>}
+      {open && <p className="mt-3 text-xs sm:text-sm text-white/60 leading-relaxed font-light">{a}</p>}
     </button>
   );
 }
@@ -61,21 +62,21 @@ export default function Home() {
           A Space for Us.
         </motion.h1>
         <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2 }}
-          className="max-w-xl text-white/40 text-sm md:text-base leading-relaxed font-light tracking-wide">
+          className="max-w-xl text-white/55 text-sm md:text-base leading-relaxed font-light tracking-wide">
           A premium, private space designed exclusively for your relationship. Capture memories, share moments,
           and grow closer — with end-to-end encryption so it stays between the two of you.
         </motion.p>
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.5 }}
           className="flex flex-col sm:flex-row gap-4 mt-2">
-          <Link href="/signup" className="px-10 py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl text-white text-sm tracking-widest uppercase transition-all backdrop-blur-md">
+          <Link href="/signup" className="px-10 py-4 bg-white/15 hover:bg-white/25 border border-rose-400/30 rounded-2xl text-white text-sm tracking-widest uppercase transition-all backdrop-blur-md shadow-[0_0_24px_rgba(251,113,133,0.12)]">
             Get Started
           </Link>
           <Link href="/login" className="px-10 py-4 hover:bg-white/5 text-white/60 hover:text-white rounded-2xl text-sm tracking-widest uppercase transition-all">
             Sign In
           </Link>
         </motion.div>
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/25 font-bold mt-4">
-          <Shield className="w-3.5 h-3.5" /> End-to-end encrypted
+        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.3em] text-white/65 font-bold mt-4">
+          <Shield className="w-3.5 h-3.5 text-emerald-400/70" /> Zero-knowledge E2EE · Your words, only yours
         </div>
         <Link href="#guide" className="absolute bottom-8 text-white/20 hover:text-white/50 transition-colors animate-bounce">
           <ChevronDown className="w-6 h-6" />
@@ -101,7 +102,7 @@ export default function Home() {
                   <span className="text-[10px] text-white/30 font-mono">0{i + 1}</span>
                   <h3 className="text-base text-white/85 font-medium">{s.title}</h3>
                 </div>
-                <p className="text-xs sm:text-sm text-white/45 leading-relaxed font-light">{s.body}</p>
+                <p className="text-xs sm:text-sm text-white/60 leading-relaxed font-light">{s.body}</p>
               </div>
             </motion.div>
           ))}
@@ -123,7 +124,7 @@ export default function Home() {
                 <f.icon className="w-5 h-5 text-white/60" />
               </div>
               <h3 className="text-sm text-white/85 font-medium">{f.title}</h3>
-              <p className="text-xs text-white/45 leading-relaxed font-light">{f.body}</p>
+              <p className="text-xs text-white/60 leading-relaxed font-light">{f.body}</p>
             </motion.div>
           ))}
         </div>
@@ -144,7 +145,7 @@ export default function Home() {
       <section className="relative z-10 max-w-3xl mx-auto px-6 pb-28 text-center flex flex-col items-center gap-6">
         <Heart className="w-8 h-8 text-rose-400/40" />
         <h2 className="text-2xl md:text-3xl font-serif text-white/90 italic">Begin your space today.</h2>
-        <Link href="/signup" className="px-10 py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl text-white text-sm tracking-widest uppercase transition-all backdrop-blur-md">
+        <Link href="/signup" className="px-10 py-4 bg-white/15 hover:bg-white/25 border border-rose-400/30 rounded-2xl text-white text-sm tracking-widest uppercase transition-all backdrop-blur-md shadow-[0_0_24px_rgba(251,113,133,0.12)]">
           Get Started
         </Link>
         <p className="text-[10px] text-white/20 tracking-wide mt-4">A private place for two · End-to-end encrypted</p>

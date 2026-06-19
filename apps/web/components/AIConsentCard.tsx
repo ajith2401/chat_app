@@ -61,9 +61,9 @@ export function AIConsentCard() {
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-serif text-white/90">AI Insights</h2>
-          <p className="text-xs text-white/40 leading-relaxed">
+          <p className="text-xs text-white/55 leading-relaxed">
             Your chat is end-to-end encrypted — by default not even our servers can read it.
-            Turning this on grants our AI permission to read your <span className="text-white/70">future</span>{" "}
+            Turning this on grants our AI permission to read your <span className="text-white/80">future</span>{" "}
             messages so it can sense your mood and surface memories. You can turn it off anytime.
           </p>
         </div>
@@ -88,10 +88,15 @@ export function AIConsentCard() {
         </div>
       ) : confirming ? (
         <div className="flex flex-col gap-3 bg-black/30 border border-white/10 rounded-xl p-4">
-          <p className="text-[11px] text-white/50 leading-relaxed">
-            This shares your conversation key with our AI service so it can read future messages.
-            Existing messages stay private unless re-processed. Continue?
+          <p className="text-[11px] text-white/60 leading-relaxed">
+            This shares your conversation key with our AI service so it can read your future messages. Specifically:
           </p>
+          <ul className="text-[11px] text-white/55 leading-relaxed flex flex-col gap-1.5 pl-1">
+            <li>· Used only to sense mood &amp; surface memories — not for training.</li>
+            <li>· Existing messages stay private unless re-processed.</li>
+            <li>· Both partners can opt in; either can revoke anytime.</li>
+            <li>· Turning it off immediately removes the shared key for future messages.</li>
+          </ul>
           <div className="flex gap-3">
             <button
               onClick={enable}

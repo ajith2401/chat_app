@@ -55,6 +55,7 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
   // Encrypted images: fetch ciphertext, decrypt to an in-memory blob URL.
   const [imgSrc, setImgSrc] = useState<string | null>(null);
   const [imgFailed, setImgFailed] = useState(false);
+  const [imgRetry, setImgRetry] = useState(0);
   useEffect(() => {
     if (type !== "image" || !mediaUrl) return;
     if (!message.mediaKey) {
@@ -85,7 +86,7 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [type, mediaUrl, message.mediaKey]);
+  }, [type, mediaUrl, message.mediaKey, imgRetry]);
 
   // --- Reactions ---
   const [showPicker, setShowPicker] = useState(false);
@@ -160,9 +161,13 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
                   className="rounded-xl max-h-[300px] w-full object-cover shadow-inner"
                 />
               ) : (
-                <div className="rounded-xl h-40 w-56 bg-white/5 flex items-center justify-center text-[10px] uppercase tracking-widest text-white/30">
-                  {imgFailed ? "Couldn't load image" : "Decrypting…"}
-                </div>
+                <button
+                  type="button"
+                  onClick={imgFailed ? () => { setImgFailed(false); setImgSrc(null); setImgRetry((n) => n + 1); } : undefined}
+                  className="rounded-xl h-40 w-56 bg-white/5 flex flex-col items-center justify-center gap-1 text-[10px] uppercase tracking-widest text-white/45"
+                >
+                  {imgFailed ? <><span>Couldn&apos;t load</span><span className="text-white/60 normal-case tracking-normal">Tap to retry</span></> : "Decrypting…"}
+                </button>
               )}
             </div>
           ) : emojiOnly ? (
@@ -177,20 +182,23 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
           </div>
         </div>
 
-        {/* Hover controls: reply + react */}
-        <div className="relative flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Reply + react controls. Hover-reveal on pointer devices, but ALWAYS
+            visible on touch (where hover doesn't exist) so they're discoverable. */}
+        <div className="relative flex items-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
           <button
             onClick={() => onReply?.(message)}
-            className="p-2 rounded-full hover:bg-white/5 text-white/20 hover:text-white/60"
+            aria-label="Reply"
             title="Reply"
+            className="p-2 rounded-full hover:bg-white/5 text-white/35 hover:text-white/70"
           >
             <ReplyIcon className="w-4 h-4" />
           </button>
           {canReact && (
             <button
               onClick={() => setShowPicker((v) => !v)}
-              className="p-2 rounded-full hover:bg-white/5 text-white/20 hover:text-white/60"
+              aria-label="React"
               title="React"
+              className="p-2 rounded-full hover:bg-white/5 text-white/35 hover:text-white/70"
             >
               <SmilePlus className="w-4 h-4" />
             </button>
@@ -253,13 +261,15 @@ export const ChatBubble = ({ message, isOwn, onReply, onRetry, onVisible, onReac
       {!failed && (
         <div className={cn(
           "flex items-center gap-1.5 px-1 transition-opacity duration-300",
-          "text-[9px] uppercase tracking-[0.1em] font-bold opacity-40 group-hover:opacity-70"
+          // Seen messages stay visible (it's an emotional moment); others dim until hover.
+          "text-[9px] uppercase tracking-[0.1em] font-bold",
+          isOwn && status?.seenAt ? "opacity-80" : "opacity-50 group-hover:opacity-80"
         )}>
-          <span className={isOwn ? "text-white/60" : "text-neutral-500"}>{timestamp}</span>
+          <span className={isOwn ? "text-white/65" : "text-white/45"}>{timestamp}</span>
           {isOwn && (
-            <span className="flex items-center">
+            <span className="flex items-center" aria-label={status?.seenAt ? "Seen" : status?.deliveredAt ? "Delivered" : "Sent"}>
               {status?.seenAt ? (
-                <CheckCheck className="w-2.5 h-2.5 text-emerald-400/80" />
+                <CheckCheck className="w-3 h-3 text-emerald-400 animate-[pulse_1.2s_ease-in-out_1]" />
               ) : status?.deliveredAt ? (
                 <CheckCheck className="w-2.5 h-2.5 text-white/40" />
               ) : (

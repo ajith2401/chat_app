@@ -10,7 +10,7 @@ import { useChatStore, Message } from "../../store/useChatStore";
 import { usePresenceStore } from "../../store/usePresenceStore";
 import { useSocket } from "../../hooks/useSocket";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Heart, Plus, Mic, Loader2, X, Smile } from "lucide-react";
+import { Send, Heart, Plus, Loader2, X, Smile } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../contexts/AuthContext";
 import { useCrypto } from "../../contexts/CryptoContext";
@@ -284,7 +284,7 @@ export default function ChatPage() {
               <div>
                 <h2 className="font-serif text-lg sm:text-xl text-white/90 tracking-tight leading-none mb-1.5">{partnerName || "My Love"}</h2>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[8px] sm:text-[9px] uppercase tracking-[0.25em] font-black ${partnerStatus === "online" ? "text-emerald-400/80" : "text-white/30"}`}>{partnerStatus}</span>
+                  <span className={`text-[8px] sm:text-[9px] uppercase tracking-[0.25em] font-black ${partnerStatus === "online" ? "text-emerald-400/80" : "text-white/45"}`}>{partnerStatus === "online" ? "here with you" : "away"}</span>
                   {partnerStatus === "online" && <span className="flex gap-0.5"><span className="w-1 h-1 bg-emerald-400/40 rounded-full animate-ping" /></span>}
                 </div>
               </div>
@@ -292,7 +292,7 @@ export default function ChatPage() {
             <div className="flex items-center gap-2 sm:gap-4">
               <MoodSelector />
               <div className="h-8 w-px bg-white/5 mx-1" />
-              <button className="p-2 sm:p-2.5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><Heart className="w-4 sm:w-5 h-4 sm:h-5 text-white/30 group-hover:text-rose-400/70 transition-colors" /></button>
+              <button onClick={() => handleSend("❤️")} aria-label="Send a heart" title="Send a heart" className="p-2 sm:p-2.5 rounded-full hover:bg-white/10 transition-all active:scale-90 group"><Heart className="w-4 sm:w-5 h-4 sm:h-5 text-white/40 group-hover:text-rose-400/70 transition-colors" /></button>
             </div>
           </header>
 
@@ -314,7 +314,8 @@ export default function ChatPage() {
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="h-full flex flex-col items-center justify-center text-center p-12">
                 <div className="w-20 h-20 rounded-full bg-white/[0.02] border border-white/5 flex items-center justify-center mb-8 shadow-inner"><Heart className="w-8 h-8 text-rose-500/20 stroke-[1px] animate-pulse" /></div>
                 <h3 className="font-serif text-2xl sm:text-3xl text-white/80 italic mb-3 tracking-tight">The beginning of Us.</h3>
-                <p className="text-[10px] uppercase tracking-[0.4em] text-white/30 font-medium">Every word is a heartbeat</p>
+                <p className="text-[10px] uppercase tracking-[0.4em] text-white/45 font-medium mb-6">Every word is a heartbeat</p>
+                <p className="text-xs text-white/45 flex items-center gap-2">Type your first whisper below <span className="text-rose-400/60">↓</span></p>
               </motion.div>
             ) : (
               <div className="flex flex-col gap-1">
@@ -348,7 +349,7 @@ export default function ChatPage() {
                   <span className="w-1.5 h-1.5 bg-white/20 rounded-full animate-bounce [animation-delay:0.2s]" />
                   <span className="w-1.5 h-1.5 bg-white/20 rounded-full animate-bounce [animation-delay:0.4s]" />
                 </div>
-                <span className="font-serif italic tracking-wide">{typingUserName || "Partner"} is thinking...</span>
+                <span className="font-serif italic tracking-wide">{typingUserName || partnerName || "Your partner"} is thinking...</span>
               </motion.div>
             )}
           </div>
@@ -365,10 +366,10 @@ export default function ChatPage() {
                   className="absolute bottom-full left-0 right-0 p-4 bg-black/80 backdrop-blur-[100px] border-t border-white/5 flex items-center justify-between"
                 >
                   <div className="flex flex-col gap-1 border-l-2 border-rose-500/50 pl-4 overflow-hidden">
-                    <span className="text-[9px] uppercase tracking-widest text-rose-400 font-black">Replying to whispering...</span>
-                    <p className="text-xs text-white/40 truncate italic">"{decryptIncoming(replyingTo)}"</p>
+                    <span className="text-[9px] uppercase tracking-widest text-rose-400 font-black">Replying to {replyingTo?.senderId === currentUserId ? "yourself" : (partnerName || "them")}</span>
+                    <p className="text-xs text-white/55 truncate italic">&quot;{decryptIncoming(replyingTo)}&quot;</p>
                   </div>
-                  <button onClick={() => setReplyTo(null)} className="p-2 rounded-full hover:bg-white/5 text-white/20 transition-all"><X className="w-4 h-4" /></button>
+                  <button onClick={() => setReplyTo(null)} aria-label="Cancel reply" className="p-2 rounded-full hover:bg-white/5 text-white/40 transition-all"><X className="w-4 h-4" /></button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -399,26 +400,26 @@ export default function ChatPage() {
             <div className="flex items-center gap-3 sm:gap-4">
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileUpload} />
               <div className="flex items-center gap-1">
-                <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 text-white/30 hover:text-white/70 hover:bg-white/10 transition-all active:scale-95 group">
+                <button onClick={() => fileInputRef.current?.click()} disabled={uploading} aria-label="Upload a photo" className="p-3 sm:p-3.5 rounded-2xl bg-white/[0.03] border border-white/5 text-white/40 hover:text-white/70 hover:bg-white/10 transition-all active:scale-95 group">
                   {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />}
                 </button>
-                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={`p-3 sm:p-3.5 rounded-2xl transition-all active:scale-95 ${showEmojiPicker ? "bg-white/10 text-white" : "text-white/30 hover:text-white/70"}`}>
+                <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} aria-label="Open emoji picker" className={`p-3 sm:p-3.5 rounded-2xl transition-all active:scale-95 ${showEmojiPicker ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70"}`}>
                   <Smile className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <div className="relative flex-1 group">
-                <input 
-                  type="text" 
-                  value={inputValue} 
-                  onChange={handleInputChange} 
-                  onKeyDown={(e) => e.key === "Enter" && handleSend(inputValue)} 
-                  placeholder="Whisper something..." 
-                  className="w-full bg-white/[0.03] border border-white/10 rounded-[1.5rem] py-4 sm:py-5 pl-6 sm:pl-7 pr-14 sm:pr-16 text-[14px] sm:text-[15px] text-white/90 focus:outline-none focus:border-white/20 focus:bg-white/[0.06] transition-all placeholder:text-white/15 font-light" 
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend(inputValue)}
+                  aria-label="Message"
+                  placeholder="Whisper something..."
+                  className="w-full bg-white/[0.06] border border-white/[0.14] rounded-[1.5rem] py-4 sm:py-5 pl-6 sm:pl-7 pr-14 sm:pr-16 text-[14px] sm:text-[15px] text-white/90 focus:outline-none focus:border-white/30 focus:bg-white/[0.08] transition-all placeholder:text-white/35 font-light"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  <button className="p-2 sm:p-3 rounded-xl text-white/20 hover:text-white/50 transition-all active:scale-90"><Mic className="w-4 sm:w-5 h-4 sm:h-5" /></button>
-                  <motion.button onClick={() => handleSend(inputValue)} disabled={!inputValue.trim()} animate={{ scale: inputValue.trim() ? 1 : 0.8, opacity: inputValue.trim() ? 1 : 0 }} className="p-2.5 sm:p-3.5 rounded-2xl bg-white/10 text-white shadow-xl hover:bg-white/20 active:scale-90 transition-all"><Send className="w-4 sm:w-5 h-4 sm:h-5" /></motion.button>
+                  <motion.button onClick={() => handleSend(inputValue)} disabled={!inputValue.trim()} aria-label="Send message" animate={{ scale: inputValue.trim() ? 1 : 0.8, opacity: inputValue.trim() ? 1 : 0 }} className="p-2.5 sm:p-3.5 rounded-2xl bg-white/10 text-white shadow-xl hover:bg-white/20 active:scale-90 transition-all"><Send className="w-4 sm:w-5 h-4 sm:h-5" /></motion.button>
                 </div>
               </div>
             </div>

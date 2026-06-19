@@ -87,14 +87,20 @@ export default function TimelinePage() {
             ))}
           </div>
         ) : milestones.length === 0 ? (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-32 text-center opacity-30"
+            className="flex flex-col items-center justify-center py-32 text-center text-white/60"
           >
-            <Sparkles className="w-16 h-16 mb-6 stroke-[1px]" />
-            <h3 className="font-serif text-2xl italic">The first chapter is waiting.</h3>
-            <p className="text-xs uppercase tracking-[0.3em] mt-4 font-bold">Mark your first milestone in the journal</p>
+            <Sparkles className="w-16 h-16 mb-6 stroke-[1px] text-white/40" />
+            <h3 className="font-serif text-2xl italic text-white/80">The first chapter is waiting.</h3>
+            <p className="text-xs uppercase tracking-[0.3em] mt-4 mb-6 font-bold text-white/45">Mark a moment as a milestone to start your story</p>
+            <button
+              onClick={() => router.push("/journal")}
+              className="px-6 py-3 rounded-xl bg-white/10 border border-white/15 text-white/80 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-white/15 transition-all"
+            >
+              Open Journal →
+            </button>
           </motion.div>
         ) : (
           <div className="relative flex flex-col gap-24 before:absolute before:left-1/2 before:top-0 before:bottom-0 before:w-px before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">

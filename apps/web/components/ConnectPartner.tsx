@@ -73,7 +73,7 @@ export function ConnectPartner() {
             <Heart className="w-7 h-7 text-rose-400/60 animate-pulse" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif text-white/90 tracking-tight">Invite your partner</h1>
-          <p className="text-xs text-white/40 leading-relaxed">
+          <p className="text-xs text-white/55 leading-relaxed">
             Share your secret code so they can join your private space. The moment they do, your chat comes alive.
           </p>
         </div>
@@ -109,7 +109,10 @@ export function ConnectPartner() {
 
         {/* Join with their code */}
         <form onSubmit={join} className="flex flex-col gap-3">
-          <span className="text-[9px] uppercase tracking-[0.3em] text-white/30 font-black text-center">Have their code?</span>
+          <span className="text-[9px] uppercase tracking-[0.3em] text-white/45 font-black text-center">Have their code?</span>
+          <p className="text-[11px] text-white/45 text-center leading-relaxed -mt-1">
+            If your partner also created a space, just paste their code here — nothing is lost.
+          </p>
           {error && <p className="text-rose-400 text-[11px] text-center">{error}</p>}
           <input
             value={partnerCode}
@@ -122,8 +125,8 @@ export function ConnectPartner() {
             {joining && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {joining ? "Joining…" : "Join their space"}
           </button>
-          <p className="text-[10px] text-white/25 text-center leading-relaxed">
-            Joining their space replaces this empty one.
+          <p className="text-[11px] text-white/45 text-center leading-relaxed">
+            Joining is safe — your account and history stay with you.
           </p>
         </form>
       </GlassContainer>

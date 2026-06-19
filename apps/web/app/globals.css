@@ -17,3 +17,20 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+/* Keyboard focus visibility (WCAG 2.4.7) — subtle on the dark theme but clear. */
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+/* Respect reduced-motion (WCAG 2.3.3): stop ambient looping animations. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-ping,
+  .animate-bounce,
+  .animate-spin {
+    animation: none !important;
+  }
+}

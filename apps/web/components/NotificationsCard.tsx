@@ -48,7 +48,7 @@ export function NotificationsCard() {
         </div>
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-serif text-white/90">Message notifications</h2>
-          <p className="text-xs text-white/40 leading-relaxed">
+          <p className="text-xs text-white/55 leading-relaxed">
             Get notified when your partner sends a message — even when this tab is closed.
             For privacy, alerts are generic (no message text is ever sent to the notification).
           </p>
@@ -58,7 +58,7 @@ export function NotificationsCard() {
       {error && <p className="text-rose-400 text-xs">{error}</p>}
 
       {!supported ? (
-        <p className="text-[11px] text-white/40 italic">
+        <p className="text-[11px] text-white/55 italic">
           This browser doesn't support web notifications. On iPhone, add this site to your Home Screen first.
         </p>
       ) : blocked && !enabled ? (

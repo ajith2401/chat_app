@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageSquare, Book, Calendar, User } from "lucide-react";
+import { MessageSquare, Book, Milestone, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -14,15 +14,15 @@ function cn(...inputs: ClassValue[]) {
 const navItems = [
   { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/journal", label: "Journal", icon: Book },
-  { href: "/timeline", label: "Story", icon: Calendar },
-  { href: "/settings", label: "Us", icon: User },
+  { href: "/timeline", label: "Memories", icon: Milestone },
+  { href: "/settings", label: "Space", icon: Users },
 ];
 
 export const BottomNav = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-6 z-[100] pointer-events-none w-full flex justify-center px-4">
+    <nav className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] z-[100] pointer-events-none w-full flex justify-center px-4">
       <motion.div
         initial={{ y: 60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

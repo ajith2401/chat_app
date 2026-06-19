@@ -50,32 +50,34 @@ export default function LoginPage() {
       <GlassContainer className="w-full max-w-md p-10 flex flex-col gap-8">
         <div className="text-center">
           <h1 className="text-3xl font-serif text-white/90 mb-2">Welcome Back</h1>
-          <p className="text-xs text-white/40 tracking-widest uppercase">Sign in to your space</p>
+          <p className="text-xs text-white/55 tracking-widest uppercase">Sign in to your space</p>
         </div>
 
         {error && <p className="text-rose-500 text-xs text-center">{error}</p>}
 
         <form onSubmit={handleLogin} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-widest text-white/70 ml-1 font-bold">Email Address</label>
+            <label htmlFor="login-email" className="text-[10px] uppercase tracking-widest text-white/70 ml-1 font-bold">Email Address</label>
             <input
+              id="login-email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
               placeholder="you@example.com"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] uppercase tracking-widest text-white/70 ml-1 font-bold">Password</label>
+            <label htmlFor="login-password" className="text-[10px] uppercase tracking-widest text-white/70 ml-1 font-bold">Password</label>
             <input
+              id="login-password"
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
+              className="bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 focus:ring-1 focus:ring-white/20 transition-all"
               placeholder="••••••••"
             />
           </div>
