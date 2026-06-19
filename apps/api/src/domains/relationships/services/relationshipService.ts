@@ -36,11 +36,23 @@ export const createRelationship = async (user1Id: string) => {
 export const joinRelationship = async (userId: string, inviteCode: string) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
-  if (user.relationshipId) throw new Error("User already in a relationship");
+
+  // If the user is already in a relationship, only allow them to leave an EMPTY,
+  // PENDING space (one they created but no partner joined). Active spaces can't be
+  // abandoned this way. This unblocks the "both created their own space" trap.
+  if (user.relationshipId) {
+    const current = await Relationship.findById(user.relationshipId);
+    if (current && current.status === "active") {
+      throw new Error("You're already in an active relationship");
+    }
+    if (current) await Relationship.findByIdAndDelete(current._id); // abandon the empty pending space
+    user.relationshipId = undefined;
+  }
 
   const relationship = await Relationship.findOne({ inviteCode: inviteCode.toUpperCase() });
   if (!relationship) throw new Error("Invalid Invite Code");
-  if (relationship.user2Id) throw new Error("Relationship already full");
+  if (relationship.user1Id.toString() === userId) throw new Error("That's your own code — share it with your partner instead");
+  if (relationship.user2Id) throw new Error("This space is already full");
 
   relationship.user2Id = new mongoose.Types.ObjectId(userId);
   relationship.status = "active";

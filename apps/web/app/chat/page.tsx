@@ -20,6 +20,7 @@ import api from "../../lib/api";
 import { Skeleton } from "../../components/Skeleton";
 import { encryptOutgoing, encryptImage, decryptIncoming, encryptReactionEmoji } from "../../lib/crypto-client";
 import { UnlockScreen } from "../../components/UnlockScreen";
+import { ConnectPartner } from "../../components/ConnectPartner";
 
 export default function ChatPage() {
   const [inputValue, setInputValue] = useState("");
@@ -225,6 +226,12 @@ export default function ChatPage() {
     </div>
   );
 
+  // Pending = no partner yet. Show the invite / join-with-their-code screen
+  // BEFORE the crypto gate — sharing a code doesn't need the key to be ready.
+  if (relationshipStatus === "pending") {
+    return <ConnectPartner />;
+  }
+
   // Gate the chat behind E2EE readiness once a relationship exists, so the
   // input never appears before the Conversation Key is available (which would
   // silently drop sends).
@@ -244,27 +251,6 @@ export default function ChatPage() {
       <div className="flex h-[100dvh] w-full flex-col items-center justify-center p-8 bg-[#050505]">
         <Loader2 className="w-6 h-6 text-white/30 animate-spin" />
         <p className="mt-4 text-[10px] uppercase tracking-[0.3em] text-white/30 font-bold">Securing your space…</p>
-      </div>
-    );
-  }
-
-  if (relationshipStatus === "pending") {
-    return (
-      <div className="flex h-[100dvh] w-full flex-col items-center justify-center p-4 md:p-8 bg-[#050505]">
-        <AmbientBackground />
-        <GlassContainer className="w-full max-w-xl p-12 text-center flex flex-col items-center gap-10" intensity="high">
-          <div className="w-24 h-24 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
-            <Heart className="w-10 h-10 text-rose-400/40 animate-pulse" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-serif text-white/90 mb-4 tracking-tight">The Space is Quiet...</h1>
-            <p className="text-sm text-white/40 leading-relaxed font-light">
-              Your partner hasn't joined this private space yet. <br />
-              Once they use your secret code, this chat will come alive.
-            </p>
-          </div>
-          <button onClick={() => router.push("/settings")} className="text-[10px] uppercase tracking-[0.4em] text-white/20 hover:text-white/60 font-black transition-all">Go to Settings to copy code</button>
-        </GlassContainer>
       </div>
     );
   }
